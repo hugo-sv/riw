@@ -1,0 +1,7 @@
+Data
+
+.DS_store
+
+*.pyc
+
+__pycache__
