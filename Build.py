@@ -1,3 +1,4 @@
+import json
 import pickle
 from os import listdir
 from os.path import isfile, join
@@ -7,19 +8,15 @@ from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 from collections import OrderedDict
-# 1 - Importer la collection
 
-'''
-Collection qui contient un ensemble de pages web du domaine stanford.edu. Les données
-sont disponibles sur le Drive. C’est un corpus de 170 MBs. Il est organisé en 10 sous-répertoires (numérotés de 0 à 9). Chaque fichier correspond au contenu textuel d’une page web individuelle.
-Chaque nom de fichier est unique dans chaque sous-répertoire mais ce n’est pas le cas globalement.
-Cette collection est déjà tokenizée.
-'''
-
-# loadData Load the dataset
+# 1 - Import de la collection
 
 
 def loadData(dataPath):
+    '''loadData Loads the dataset at the given path.
+    It must be in the following format : '''
+    print("Loading the dataset")
+    Filenames = []
     totalWords = 0
     corpus = {}
     i = 0
@@ -37,27 +34,28 @@ def loadData(dataPath):
                     dirPath = join(dir, filename)
                     # Appending corpus, using Filenames' index
                     # Tokenizing with nltk here to save computation time
-                    corpus[dirPath] = word_tokenize(f.read())
-                    totalWords += len(corpus[dirPath])
+                    corpus[i] = word_tokenize(f.read())
+                    Filenames.append(dirPath)
                     i += 1
-                    # # Breaking point for testing purpose, @TODO Remove this
-                    # if i == 5:
-                    #     print("Total words : "+str(totalWords))
-                    #     return corpus
-    print("Total words : "+str(totalWords))
-    return corpus
+                    if i >= 1000:
+                        return corpus, Filenames
+    return corpus, Filenames
 
 
 dataPath = "Data/pa1-data/"
-corpus = loadData(dataPath)
+corpus, Filenames = loadData(dataPath)
 
-# 2 - Preprocess la collection
+json = json.dumps(Filenames)
+f = open("Filenames.json", "w")
+f.write(json)
+f.close()
 
-# remove_stop_words Remove stop words (from Lab1.py)
+# 2 - Processing de la collection
 
 
 def remove_stop_words(collection):
-    removedWords = 0
+    '''remove_stop_words Remove stop words (from Lab1.py)'''
+    print("Removing stop words")
     stopWords = set(stopwords.words('english'))
     collection_filtered = {}
     for i in collection:
@@ -65,57 +63,43 @@ def remove_stop_words(collection):
         for j in collection[i]:
             if j not in stopWords:
                 collection_filtered[i].append(j)
-            else:
-                removedWords += 1
-    print("Removed stop words : "+str(removedWords))
     return collection_filtered
 
 
 corpus = remove_stop_words(corpus)
 
-# Stemming (from Lab1.py)
-
 
 def collection_stemming(segmented_collection):
-    removedWords = 0
+    print("Stemming the collection")
     stemmed_collection = {}
     stemmer = PorterStemmer()  # initialisation d'un stemmer
     for i in segmented_collection:
         stemmed_collection[i] = []
         for j in segmented_collection[i]:
-            stemmed_collection[i].append(stemmer.stem(j))
-        removedWords += len(set(segmented_collection[i])) - \
-            len(set(stemmed_collection[i]))
-    print("Saved stemmed words : "+str(removedWords))
+            stemmed_collection[i].append(stemmer.stem(j.upper()))
     return stemmed_collection
-
-# Lemmatization (from Lab1.py)
 
 
 def collection_lemmatize(segmented_collection):
-    removedWords = 0
+    print("Lemmatization of the collection")
     lemmatized_collection = {}
     stemmer = WordNetLemmatizer()  # initialisation d'un lemmatiseur
     for i in segmented_collection:
         lemmatized_collection[i] = []
         for j in segmented_collection[i]:
             lemmatized_collection[i].append(stemmer.lemmatize(j))
-        removedWords += len(set(segmented_collection[i])) - len(
-            set(lemmatized_collection[i]))
-    print("Saved stemmed words : "+str(removedWords))
     return lemmatized_collection
 
 
-# Apply stemming, or lemmatization ?
+# Apply lemmatization only, as it provides better results
 corpus = collection_lemmatize(corpus)
 
 # 3 - Calculer la matrice d'occurences
 
-# build_inverted_index builds the inverted index the requested type_index. (from Lab1.py)
-
 
 def build_inverted_index(collection, type_index):
-    # On considère ici que la collection est pré-traitée
+    '''builds the inverted index the requested type_index'''
+    print("Building inverted index")
     inverted_index = OrderedDict()
     if type_index == 1:
         for document in collection:
@@ -150,7 +134,6 @@ def build_inverted_index(collection, type_index):
                 else:
                     inverted_index[term] = OrderedDict()
                     inverted_index[term][document] = [1, [n]]
-
     return inverted_index
 
 
@@ -158,13 +141,12 @@ inverted_index = build_inverted_index(corpus, 1)
 
 # 4 - Sauvegarder la matrice d'occurences et les Filenames.
 
-# Save and load, (from saveandload_pickle.py)
-
 
 def save_inverted_index_pickle(inverted_index, filename):
+    print("Saving the index")
     with open(filename, "wb") as f:
         pickle.dump(inverted_index, f)
         f.close()
 
 
-save_inverted_index_pickle(inverted_index, "dump")
+save_inverted_index_pickle(inverted_index, "inverted_index")
