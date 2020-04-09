@@ -5,6 +5,8 @@ import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
+from nltk.corpus import stopwords
+from collections import OrderedDict
 # 1 - Importer la collection
 
 '''
@@ -18,8 +20,8 @@ Cette collection est déjà tokenizée.
 
 
 def loadData(dataPath):
+    totalWords = 0
     corpus = {}
-    Filenames = []
     i = 0
     # In each directories
     for dir in [str(i) for i in range(10)]:
@@ -32,62 +34,80 @@ def loadData(dataPath):
             if isfile(filePath):
                 with open(filePath, 'r') as f:
                     # Keeping dir as each filename is not necessarily unique
-                    Filenames.append(join(dir, filename))
+                    dirPath = join(dir, filename)
                     # Appending corpus, using Filenames' index
                     # Tokenizing with nltk here to save computation time
-                    corpus[i] = word_tokenize(f.read())
+                    corpus[dirPath] = word_tokenize(f.read())
+                    totalWords += len(corpus[dirPath])
                     i += 1
-                    # Breaking point for testing purpose, @TODO Remove this
-                    if i == 5:
-                        return corpus, Filenames
-    return corpus, Filenames
+                    # # Breaking point for testing purpose, @TODO Remove this
+                    # if i == 5:
+                    #     print("Total words : "+str(totalWords))
+                    #     return corpus
+    print("Total words : "+str(totalWords))
+    return corpus
 
 
 dataPath = "Data/pa1-data/"
-corpus, Filenames = loadData(dataPath)
-print(corpus, Filenames)
+corpus = loadData(dataPath)
 
 # 2 - Preprocess la collection
 
 # remove_stop_words Remove stop words (from Lab1.py)
 
 
-def remove_stop_words(collection, stop_word_file):
+def remove_stop_words(collection):
+    removedWords = 0
+    stopWords = set(stopwords.words('english'))
     collection_filtered = {}
     for i in collection:
         collection_filtered[i] = []
         for j in collection[i]:
-            if j not in stop_word_file:
+            if j not in stopWords:
                 collection_filtered[i].append(j)
+            else:
+                removedWords += 1
+    print("Removed stop words : "+str(removedWords))
     return collection_filtered
 
+
+corpus = remove_stop_words(corpus)
 
 # Stemming (from Lab1.py)
 
 
 def collection_stemming(segmented_collection):
+    removedWords = 0
     stemmed_collection = {}
     stemmer = PorterStemmer()  # initialisation d'un stemmer
     for i in segmented_collection:
         stemmed_collection[i] = []
         for j in segmented_collection[i]:
             stemmed_collection[i].append(stemmer.stem(j))
+        removedWords += len(set(segmented_collection[i])) - \
+            len(set(stemmed_collection[i]))
+    print("Saved stemmed words : "+str(removedWords))
     return stemmed_collection
-
 
 # Lemmatization (from Lab1.py)
 
 
 def collection_lemmatize(segmented_collection):
+    removedWords = 0
     lemmatized_collection = {}
     stemmer = WordNetLemmatizer()  # initialisation d'un lemmatiseur
     for i in segmented_collection:
         lemmatized_collection[i] = []
         for j in segmented_collection[i]:
             lemmatized_collection[i].append(stemmer.lemmatize(j))
+        removedWords += len(set(segmented_collection[i])) - len(
+            set(lemmatized_collection[i]))
+    print("Saved stemmed words : "+str(removedWords))
     return lemmatized_collection
 
+
 # Apply stemming, or lemmatization ?
+corpus = collection_lemmatize(corpus)
 
 # 3 - Calculer la matrice d'occurences
 
@@ -133,6 +153,9 @@ def build_inverted_index(collection, type_index):
 
     return inverted_index
 
+
+inverted_index = build_inverted_index(corpus, 1)
+
 # 4 - Sauvegarder la matrice d'occurences et les Filenames.
 
 # Save and load, (from saveandload_pickle.py)
@@ -144,25 +167,4 @@ def save_inverted_index_pickle(inverted_index, filename):
         f.close()
 
 
-def load_inverted_index_pickle(filename):
-    with open(filename, 'rb') as fb:
-        index = pickle.load(fb)
-        return index
-
-# @TODO Save Filenames
-
-# 4 - Parser les requetes
-
-# Cf exemples dans Queries/ -> stanford students
-
-# 5 - Executer des requetes
-
-# Cf Utils/Lab2.py
-
-# 6 - Afficher Résultats
-
-# Cf exemples dans Queries/ -> Liste ordonnée de n (?) documents
-
-# 7 - Evaluer résultats
-
-# Cf Queries/dev_output
+save_inverted_index_pickle(inverted_index, "dump")
