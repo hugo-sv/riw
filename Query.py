@@ -35,7 +35,7 @@ def loadQueries():
                 # Remove Stop words
                 if word not in stopWords:
                     # Lemmatization
-                    query.append(stemmer.lemmatize(word.upper()))
+                    query.append(stemmer.lemmatize(word.lower()))
             Queries.append(query)
     return Queries
 
