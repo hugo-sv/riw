@@ -3,3 +3,6 @@
 *.pyc
 
 __pycache__
+
+inverted_index
+Filenames.json
