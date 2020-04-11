@@ -138,10 +138,10 @@ def boolean_operator_processing_with_inverted_index(BoolOperator, posting_term1,
     return result
 
 
-def processing_boolean_query_with_inverted_index(booleanOperator, query, inverted_index):
+def processing_boolean_query_with_inverted_index(booleanOperators, query, inverted_index):
     evaluation_stack = []
     for term in query:
-        if term.upper() not in booleanOperator:
+        if term.upper() not in booleanOperators:
             evaluation_stack.append(inverted_index[term.upper()])
         else:
             if term.upper() == "NOT":
