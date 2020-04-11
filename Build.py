@@ -17,7 +17,6 @@ def loadData(dataPath):
     It must be in the following format : '''
     print("Loading the dataset")
     Filenames = []
-    totalWords = 0
     corpus = {}
     i = 0
     # In each directories

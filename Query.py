@@ -139,7 +139,6 @@ def boolean_operator_processing_with_inverted_index(BoolOperator, posting_term1,
 
 
 def processing_boolean_query_with_inverted_index(booleanOperator, query, inverted_index):
-    relevant_docs = {}
     evaluation_stack = []
     for term in query:
         if term.upper() not in booleanOperator:
