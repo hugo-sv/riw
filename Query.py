@@ -5,6 +5,7 @@ from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 from tt import BooleanExpression
 import traceback
+import json
 
 
 def load_inverted_index_pickle(filename):
@@ -173,6 +174,7 @@ def processing_boolean_query_with_inverted_index(booleanOperators, query, invert
     return evaluation_stack.pop()
 
 booleanOperators = ['AND', 'OR', 'NOT']
+Outputs = []
 for query in Queries:
     try:
         q, out = [], []
@@ -186,6 +188,7 @@ for query in Queries:
         print(f"### Query {query} -> {q}: OK ###")
         print(out)
         print()
+        Outputs.append(out)
     except Exception:
         print(f"### Query {query}: failed ###")
         print(traceback.format_exc())
@@ -195,5 +198,37 @@ for query in Queries:
 # Cf exemples dans Queries/ -> Liste ordonnée de n (?) documents
 
 # 7 - Evaluer résultats
+
+## Load expected output
+
+def loadExpectedOutputs():
+    loadedFiles = []
+    with open("Filenames.json", 'r') as f:
+        loadedFiles = json.load(f)
+
+    fileIdx = {}
+    for idx, filename in enumerate(loadedFiles):
+        fileIdx[filename] = idx
+
+    Outputs = []
+    i = 0
+    for i in range(1, 9):
+        current_output = []
+        with open(f"Queries/dev_output/{i}.out", 'r') as f:
+            for line in f:
+                parsed_line = line.rstrip('\n')
+                if parsed_line in fileIdx:
+                    current_output.append(fileIdx[parsed_line])
+        Outputs.append(current_output)
+    return Outputs
+
+ExpectedOutputs = loadExpectedOutputs()
+print(ExpectedOutputs)
+
+def compareOutputs(expected, actual):
+    # todo
+    return
+
+# def processOutput
 
 # Cf Queries/dev_output
