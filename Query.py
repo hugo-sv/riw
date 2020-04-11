@@ -58,11 +58,25 @@ def transformation_lem_query_to_boolean(query, operator='AND'):
     return boolean_query
 
 
-def transformation_query_to_postfixe(query):
-    b = BooleanExpression(' '.join(query))
-    return b.postfix_tokens
-# Operateur AND sur posting listes
+def transformation_query_to_postfixe(booleanOperators, query):
+    # query can contain keywords that do not pass ttable's is_valid_identifier function:
+    # https://github.com/welchbj/tt/blob/43beecac6fae9ac7e2035b66b6e790cfc25167ba/tt/definitions/operands.py#L33-L90
+    # we still want to be able to handle queries containing forbidden keywords like "class"
+    # so we make the identifiers abstract
+    abstract_query = []
+    matcher = {}
+    for token in query:
+        if token in booleanOperators:
+            matcher[token] = token
+            abstract_query.append(token)
+        else:
+            abstract_token = f"var{len(abstract_query)}"
+            abstract_query.append(abstract_token)
+            matcher[abstract_token] = token
+    postfix_abstract = BooleanExpression(' '.join(abstract_query)).postfix_tokens
+    return [matcher[key] for key in postfix_abstract]
 
+# Operateur AND sur posting listes
 
 def merge_and_postings_list(posting_term1, posting_term2):
     result = []
@@ -158,12 +172,13 @@ def processing_boolean_query_with_inverted_index(booleanOperators, query, invert
                 evaluation_stack.append(eval_prop[0])
     return evaluation_stack.pop()
 
+booleanOperators = ['AND', 'OR', 'NOT']
 for query in Queries:
     try:
-        q = transformation_query_to_postfixe(
+        q = transformation_query_to_postfixe(booleanOperators, 
             transformation_lem_query_to_boolean(query))
         out = processing_boolean_query_with_inverted_index(
-            ['AND', 'OR', 'NOT'], q, inverted_index)
+            booleanOperators, q, inverted_index)
         print(f"### Query {query} -> {q}: OK ###")
         print(out)
         print()
