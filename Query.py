@@ -164,7 +164,7 @@ for query in Queries:
             transformation_lem_query_to_boolean(query))
         out = processing_boolean_query_with_inverted_index(
             ['AND', 'OR', 'NOT'], q, inverted_index)
-        print(f"### Query {query}: OK ###")
+        print(f"### Query {query} -> {q}: OK ###")
         print(out)
         print()
     except Exception:
