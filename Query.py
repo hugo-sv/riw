@@ -4,6 +4,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 from tt import BooleanExpression
+import traceback
 
 
 def load_inverted_index_pickle(filename):
@@ -14,7 +15,7 @@ def load_inverted_index_pickle(filename):
 
 inverted_index = load_inverted_index_pickle("inverted_index")
 
-print(inverted_index['science'])
+# print(inverted_index['science'])
 
 # 4 - Parser les requetes
 
@@ -41,7 +42,7 @@ def loadQueries():
 
 Queries = loadQueries()
 
-print(Queries)
+# print(Queries)
 
 # 5 - Executer des requetes
 
@@ -157,12 +158,18 @@ def processing_boolean_query_with_inverted_index(booleanOperators, query, invert
                 evaluation_stack.append(eval_prop[0])
     return evaluation_stack.pop()
 
-
-query = transformation_query_to_postfixe(
-    transformation_lem_query_to_boolean(Queries[1]))
-
-print(processing_boolean_query_with_inverted_index(
-    ['AND', 'OR', 'NOT'], query, inverted_index))
+for query in Queries:
+    try:
+        q = transformation_query_to_postfixe(
+            transformation_lem_query_to_boolean(query))
+        out = processing_boolean_query_with_inverted_index(
+            ['AND', 'OR', 'NOT'], q, inverted_index)
+        print(f"### Query {query}: OK ###")
+        print(out)
+        print()
+    except Exception:
+        print(f"### Query {query}: failed ###")
+        print(traceback.format_exc())
 
 # 6 - Afficher Résultats
 
