@@ -175,10 +175,14 @@ def processing_boolean_query_with_inverted_index(booleanOperators, query, invert
 booleanOperators = ['AND', 'OR', 'NOT']
 for query in Queries:
     try:
-        q = transformation_query_to_postfixe(booleanOperators, 
-            transformation_lem_query_to_boolean(query))
-        out = processing_boolean_query_with_inverted_index(
-            booleanOperators, q, inverted_index)
+        q, out = [], []
+        if len(query) == 0:
+            q = query
+        else:
+            q = transformation_query_to_postfixe(booleanOperators, 
+                transformation_lem_query_to_boolean(query))
+            out = processing_boolean_query_with_inverted_index(
+                booleanOperators, q, inverted_index)
         print(f"### Query {query} -> {q}: OK ###")
         print(out)
         print()
