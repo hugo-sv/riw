@@ -18,6 +18,8 @@ DATA_PATH = "Data/pa1-data/"
 # 1 - Import de la collection
 
 # Like map(), but built to accept multiple functions
+
+
 def map_many(iterable, *functions):
     if len(functions) == 0:
         return iterable
@@ -49,20 +51,27 @@ def loadData(rootPath, shouldKeep, *processors):
             with open(join(dirPath, filename), 'r') as f:
                 filenames.append(join(dirName, filename))
                 # skipping tokenization as collection is already tokenized
-                corpus[i] = map_many(filter(shouldKeep, f.read().split(' ')), *processors)
+                corpus[i] = map_many(
+                    filter(shouldKeep, f.read().split(' ')), *processors)
                 i += 1
     return corpus, filenames
 
+
 # Stop word remover
 stopWords = set(stopwords.words('english'))
-isNotStopWord = lambda word: word not in stopWords
+
+
+def isNotStopWord(word): return word not in stopWords
 
 # Convert to lowercase
-lowerize = lambda word: word.lower()
+
+
+def lowerize(word): return word.lower()
 
 # We don't stem and go straight to lemmatization as it provides better results
 # Stemmer = PorterStemmer()
 # stem = lambda word: Stemmer.stem(word)
+
 
 # Lemmatizer
 # Using memoization (lru_cache) cache here gives a significant speed-up
@@ -87,7 +96,7 @@ def build_inverted_index(collection):
         if current % 100 == 0:
             sys.stdout.write(f"Processing: {current} / {filecount}\r")
             sys.stdout.flush()
-        
+
         for term in collection[document]:
             if term in inverted_index:
                 if document in inverted_index[term]:
@@ -100,6 +109,7 @@ def build_inverted_index(collection):
     sys.stdout.write(f"Processing: {filecount} / {filecount}\r\n")
     sys.stdout.flush()
     return inverted_index
+
 
 inverted_index = build_inverted_index(corpus)
 
