@@ -3,6 +3,8 @@
 *.pyc
 
 __pycache__
+.venv
+.vscode
 
 inverted_index
 Filenames.json
