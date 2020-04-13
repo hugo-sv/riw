@@ -1,21 +1,20 @@
 import json
 import pickle
+from sys import stdout
 from os import listdir
 from os.path import isfile, join
-import nltk
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 from collections import OrderedDict
 from functools import lru_cache
-import sys
 
 # Config
 
 DATA_PATH = "Data/pa1-data/"
 
-# 1 - Import de la collection
+# 1 - Import the dataset
 
 # Like map(), but built to accept multiple functions
 
@@ -85,7 +84,7 @@ corpus, Filenames, postings = loadData(
     DATA_PATH, isNotStopWord, lowerize, lemmatize)
 
 
-# 2 - Calcul de l'index inversé
+# 2 - Build inverted index
 
 def build_inverted_index(collection):
     '''builds the inverted index'''
@@ -98,8 +97,8 @@ def build_inverted_index(collection):
         # Print progress
         current += 1
         if current % 100 == 0:
-            sys.stdout.write(f"Processing: {current} / {filecount}\r")
-            sys.stdout.flush()
+            stdout.write(f"Processing: {current} / {filecount}\r")
+            stdout.flush()
 
         for term in collection[document]:
             if term in inverted_index:
@@ -110,15 +109,20 @@ def build_inverted_index(collection):
             else:
                 inverted_index[term] = {document: 1}
 
-    sys.stdout.write(f"Processing: {filecount} / {filecount}\r\n")
-    sys.stdout.flush()
+    stdout.write(f"Processing: {filecount} / {filecount}\r\n")
+    stdout.flush()
     return inverted_index
 
 
 inverted_index = build_inverted_index(corpus)
 
+cache_info = lemmatize.cache_info()
+cache_hit_ratio = 100 * cache_info.hits / (cache_info.hits + cache_info.misses)
+print(
+    f"lemmatize cache stats: {cache_info} (cache hit ratio: {cache_hit_ratio:.1f}%)")
 
-# 3 - Sauvegarde de l'index inversé, des Filenames et données de postings
+# 3 - Save inverted index, posting data and file names
+
 
 def save_inverted_index_pickle(inverted_index, filename):
     print("Saving inverted index to disk...")

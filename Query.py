@@ -1,11 +1,11 @@
+import json
 import pickle
+import traceback
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 from tt import BooleanExpression
-import traceback
-import json
 
 # 1 - Loading the inverted Index
 
