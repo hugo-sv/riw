@@ -195,6 +195,7 @@ for query in Queries:
     except Exception:
         print(f"### Query {query}: failed ###")
         print(traceback.format_exc())
+        Outputs.append([])
 
 # 6 - Afficher Résultats
 
@@ -213,7 +214,7 @@ def loadExpectedOutputs():
     fileIdx = {}
     for idx, filename in enumerate(loadedFiles):
         fileIdx[filename] = idx
-
+    MissingFiles = 0
     Outputs = []
     i = 0
     for i in range(1, 9):
@@ -223,18 +224,29 @@ def loadExpectedOutputs():
                 parsed_line = line.rstrip('\n')
                 if parsed_line in fileIdx:
                     current_output.append(fileIdx[parsed_line])
+                else:
+                    MissingFiles += 1
         Outputs.append(current_output)
+    print("Missing files :", MissingFiles)
     return Outputs
 
 
 ExpectedOutputs = loadExpectedOutputs()
-print(ExpectedOutputs)
+# print(ExpectedOutputs)
 
 
-def compareOutputs(expected, actual):
-    # todo
-    return
+def compareOutputsBoolean(expected, actual):
+    # With boolean queries, there are no notions of order
+    if len(expected) > 0 and len(actual) > 0:
+        intersected = len(set(expected).intersection(set(actual)))
+        return intersected/len(expected)
+    return 0
 
-# def processOutput
 
-# Cf Queries/dev_output
+if (len(ExpectedOutputs) != len(Outputs) or len(Outputs) != len(Queries)):
+    print("Issue in Ouputs size.")
+else:
+    for idx, query in enumerate(Queries):
+        print("Query :", query)
+        print("Score :", compareOutputsBoolean(
+            ExpectedOutputs[idx], Outputs[idx]))
