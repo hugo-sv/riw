@@ -26,7 +26,7 @@ python3 Build.py
 ```
 
 This will load the dataset and create an inverted index of its contents. This
-process can take a bit of time (~1 min 30 sec on our setup) and use a decent
+process can take a bit of time (~1 min 40 sec on our setup) and use a decent
 amount of RAM (~2GB during our tests).
 
 It will output an `inverted_index` file of about 80 MB, as well as a
@@ -91,14 +91,17 @@ below the cache hit ratios obtained when indexing the entire collection:
 We used Python's `cProfile` module to measure the execution time of the
 different parts of the function. Our observations are as follow.
 
+![cProfile output viewed with snakeviz](https://user-images.githubusercontent.com/8351433/79143264-3766db00-7dbd-11ea-87c8-71937f861eab.png)
+
 First, we spend (as expected) a significant portion of the execution time
 waiting on file IOs. Since we are reading a large number of small files, we are
-likely not limited by disk bandwidth but by disk latency. We expect that **making
-concurrent disk IO requests would largely reduce overall IO time**.
+likely not limited by disk bandwidth but by disk latency. We expect that
+**making concurrent disk IO requests would largely reduce overall IO time**.
 
-Second, we start by reading all files (~ 60 sec), only to process their content
-in a second phase (~ 40 sec). We should **start processing file contents while
-waiting on disk IO** to speed up the overall script execution time.
+Second, we start by reading all files (`loadData`, ~ 60 sec), only to process
+their content in a second phase (`build_inverted_index`, ~ 40 sec). We should
+**start processing file contents while waiting on disk IO** to speed up the
+overall script execution time.
 
 Finally, **memory usage could be optimized as well**, for example by inserting terms
 directly in the inverted index, without saving them in an intermediary data
