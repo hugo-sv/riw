@@ -40,6 +40,7 @@ def loadData(rootPath, shouldKeep, *processors):
 
     print("Loading dataset")
     filenames = []
+    postings = []
     corpus = {}
     i = 0
 
@@ -51,10 +52,12 @@ def loadData(rootPath, shouldKeep, *processors):
             with open(join(dirPath, filename), 'r') as f:
                 filenames.append(join(dirName, filename))
                 # skipping tokenization as collection is already tokenized
-                corpus[i] = map_many(
+                terms = map_many(
                     filter(shouldKeep, f.read().split(' ')), *processors)
+                postings.append(len(list(terms)))
+                corpus[i] = terms
                 i += 1
-    return corpus, filenames
+    return corpus, filenames, postings
 
 
 # Stop word remover
@@ -78,7 +81,8 @@ def lowerize(word): return word.lower()
 Lemmatizer = WordNetLemmatizer()
 lemmatize = lru_cache(maxsize=None)(Lemmatizer.lemmatize)
 
-corpus, Filenames = loadData(DATA_PATH, isNotStopWord, lowerize, lemmatize)
+corpus, Filenames, postings = loadData(
+    DATA_PATH, isNotStopWord, lowerize, lemmatize)
 
 
 # 2 - Calcul de l'index inversé
@@ -114,7 +118,7 @@ def build_inverted_index(collection):
 inverted_index = build_inverted_index(corpus)
 
 
-# 3 - Sauvegarde de l'index inversé et des Filenames
+# 3 - Sauvegarde de l'index inversé, des Filenames et données de postings
 
 def save_inverted_index_pickle(inverted_index, filename):
     print("Saving inverted index to disk...")
@@ -125,7 +129,14 @@ def save_inverted_index_pickle(inverted_index, filename):
 
 save_inverted_index_pickle(inverted_index, "inverted_index")
 
-json = json.dumps(Filenames)
+# Exporting file names for post-processing
+dump = json.dumps(Filenames)
 f = open("Filenames.json", "w")
-f.write(json)
+f.write(dump)
+f.close()
+
+# Exporting terms per document for vectorial models
+dump = json.dumps(postings)
+f = open("Postings.json", "w")
+f.write(dump)
 f.close()
