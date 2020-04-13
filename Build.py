@@ -11,32 +11,37 @@ from collections import OrderedDict
 
 # 1 - Import de la collection
 
+MAX_FILES_TO_INDEX = 7000
 
-def loadData(dataPath):
+def loadData(rootPath):
     '''loadData Loads the dataset at the given path.
     It must be in the following format : '''
     print("Loading the dataset")
     Filenames = []
     corpus = {}
-    i = 0
-    # In each directories
-    for dir in [str(i) for i in range(10)]:
-        directoryPath = dataPath+dir
-        print("Parsing file "+dir + "/9...")
-        # For each file
-        for filename in listdir(directoryPath):
-            filePath = join(directoryPath, filename)
-            # If this is a file
+    indexed = 0
+
+    for dirName in sorted(listdir(rootPath)):
+        dirPath = join(rootPath, dirName)
+
+        # skip files
+        if isfile(dirPath):
+            continue
+
+        print(f"Parsing directory {dirPath}...")
+
+        for filename in listdir(dirPath):
+            filePath = join(dirPath, filename)
+
             if isfile(filePath):
                 with open(filePath, 'r') as f:
-                    # Keeping dir as each filename is not necessarily unique
-                    dirPath = join(dir, filename)
-                    # Appending corpus, using Filenames' index
-                    # Tokenizing with nltk here to save computation time
-                    corpus[i] = word_tokenize(f.read())
-                    Filenames.append(dirPath)
-                    i += 1
-                    if i >= 1000:
+                    shortPath = join(dirName, filename)
+
+                    # collection is already tokenized
+                    corpus[indexed] = f.read().split(' ')
+                    Filenames.append(shortPath)
+                    indexed += 1
+                    if indexed > MAX_FILES_TO_INDEX:
                         return corpus, Filenames
     return corpus, Filenames
 
