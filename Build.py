@@ -12,7 +12,7 @@ from functools import lru_cache
 
 # Config
 
-MAX_FILES_TO_INDEX = 7000
+MAX_FILES_TO_INDEX = 200000
 DATA_PATH = "Data/pa1-data/"
 
 # 1 - Import et processing de la collection
@@ -41,7 +41,7 @@ def loadData(rootPath, shouldKeep, *processors):
         if isfile(dirPath):
             continue
 
-        print(f"Parsing directory {dirPath}...")
+        print(f"Loading files from {dirPath}...")
 
         for filename in listdir(dirPath):
             filePath = join(dirPath, filename)
@@ -83,47 +83,24 @@ f.close()
 # 3 - Calculer la matrice d'occurences
 
 
-def build_inverted_index(collection, type_index):
-    '''builds the inverted index the requested type_index'''
-    print("Building inverted index")
-    inverted_index = OrderedDict()
-    if type_index == 1:
-        for document in collection:
-            for term in collection[document]:
-                if term in inverted_index.keys():
-                    if document not in inverted_index[term]:
-                        inverted_index[term].append(document)
+def build_inverted_index(collection):
+    '''builds the inverted index'''
+    print("Parsing files and building inverted index")
+    inverted_index = {}
+    for document in collection:
+        for term in collection[document]:
+            if term in inverted_index:
+                if document in inverted_index[term]:
+                    inverted_index[term][document] += 1
                 else:
-                    inverted_index[term] = [document]
-    elif type_index == 2:
-        for document in collection:
-            for term in collection[document]:
-                if term in inverted_index.keys():
-                    if document in inverted_index[term].keys():
-                        inverted_index[term][document] = inverted_index[term][document] + 1
-                    else:
-                        inverted_index[term][document] = 1
-                else:
-                    inverted_index[term] = OrderedDict()
                     inverted_index[term][document] = 1
-    elif type_index == 3:
-        for document in collection:
-            n = 0
-            for term in collection[document]:
-                n = n+1
-                if term in inverted_index.keys():
-                    if document in inverted_index[term].keys():
-                        inverted_index[term][document][0] = inverted_index[term][document][0] + 1
-                        inverted_index[term][document][1].append(n)
-                    else:
-                        inverted_index[term][document] = [1, [n]]
-                else:
-                    inverted_index[term] = OrderedDict()
-                    inverted_index[term][document] = [1, [n]]
+            else:
+                inverted_index[term] = {}
+                inverted_index[term][document] = 1
     return inverted_index
 
 
-inverted_index = build_inverted_index(corpus, 1)
+inverted_index = build_inverted_index(corpus)
 
 # 4 - Sauvegarder la matrice d'occurences et les Filenames.
 
