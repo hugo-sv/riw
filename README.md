@@ -1,7 +1,7 @@
 # RI-W
 
 This project implements a basic Information Retrieval (IR) system using the
-boolean model.
+boolean and vectorial models.
 
 ## Requirements
 
@@ -28,7 +28,7 @@ tar -xvf pa1-data.zip
 Run:
 
 ```sh
-python3 Build.py
+python3 0_build_index.py
 ```
 
 This will load the dataset and create an inverted index of its contents. This
@@ -40,18 +40,24 @@ It will output an `inverted_index` file of about 80 MB, as well as a
 
 ### 3. Running the default queries
 
-Run:
+Depending on which Information Retrieval model you want to use, you can run either:
 
 ```sh
-python3 Query.py
+python3 1a_boolean_query.py
 ```
 
-This will run each query in `Queries/dev_queries` and score its output against
+or
+
+```sh
+python3 1b_vectorial_query.py
+```
+
+Either script will run each query in `Queries/dev_queries` and score its output against
 the reference output (located in `Queries/dev_output`).
 
 ## Performance considerations: loading data and indexing
 
-Our initial version of `Build.py` was pretty naive, and therefore too slow to
+Our initial version of `0_build_index.py` was pretty naive, and therefore too slow to
 load and index the complete collection in a reasonable amount of time. In five
 minutes, we could only load and index about one-tenth of the collection, which
 was not satisfying.
