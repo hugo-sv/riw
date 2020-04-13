@@ -16,10 +16,9 @@ DATA_PATH = "Data/pa1-data/"
 
 # 1 - Import the dataset
 
-# Like map(), but built to accept multiple functions
-
-
 def map_many(iterable, *functions):
+    '''Like map(), but built to accept multiple functions'''
+
     if len(functions) == 0:
         return iterable
     if len(functions) == 1:
@@ -66,8 +65,6 @@ stopWords = set(stopwords.words('english'))
 def isNotStopWord(word): return word not in stopWords
 
 # Convert to lowercase
-
-
 def lowerize(word): return word.lower()
 
 # We don't stem and go straight to lemmatization as it provides better results
@@ -121,8 +118,8 @@ cache_hit_ratio = 100 * cache_info.hits / (cache_info.hits + cache_info.misses)
 print(
     f"lemmatize cache stats: {cache_info} (cache hit ratio: {cache_hit_ratio:.1f}%)")
 
-# 3 - Save inverted index, posting data and file names
 
+# 3 - Save inverted index, posting data and file names
 
 def save_inverted_index_pickle(inverted_index, filename):
     print("Saving inverted index to disk...")
