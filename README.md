@@ -3,6 +3,12 @@
 This project implements a basic Information Retrieval (IR) system using the
 boolean model.
 
+## Requirements
+
+1. Make sure that you are running `Python 3`. This project has only been tested using `Python 3.7`.
+2. Install dependencies by running: `pip3 install -r requirements.txt`
+3. Make sure that you have the necessary `nltk` data by running: `python3 -m nltk.downloader stopwords punkt wordnet`
+
 ## Usage
 
 ### 1. Getting the dataset
