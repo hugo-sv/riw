@@ -75,7 +75,7 @@ def collection_stemming(segmented_collection):
     for i in segmented_collection:
         stemmed_collection[i] = []
         for j in segmented_collection[i]:
-            stemmed_collection[i].append(stemmer.stem(j.upper()))
+            stemmed_collection[i].append(stemmer.stem(j.lower()))
     return stemmed_collection
 
 
@@ -86,7 +86,8 @@ def collection_lemmatize(segmented_collection):
     for i in segmented_collection:
         lemmatized_collection[i] = []
         for j in segmented_collection[i]:
-            lemmatized_collection[i].append(stemmer.lemmatize(j))
+            lemmatized_collection[i].append(
+                stemmer.lemmatize(j.lower()))
     return lemmatized_collection
 
 

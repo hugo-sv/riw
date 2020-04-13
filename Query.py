@@ -74,10 +74,12 @@ def transformation_query_to_postfixe(booleanOperators, query):
             abstract_token = f"var{len(abstract_query)}"
             abstract_query.append(abstract_token)
             matcher[abstract_token] = token
-    postfix_abstract = BooleanExpression(' '.join(abstract_query)).postfix_tokens
+    postfix_abstract = BooleanExpression(
+        ' '.join(abstract_query)).postfix_tokens
     return [matcher[key] for key in postfix_abstract]
 
 # Operateur AND sur posting listes
+
 
 def merge_and_postings_list(posting_term1, posting_term2):
     result = []
@@ -173,6 +175,7 @@ def processing_boolean_query_with_inverted_index(booleanOperators, query, invert
                 evaluation_stack.append(eval_prop[0])
     return evaluation_stack.pop()
 
+
 booleanOperators = ['AND', 'OR', 'NOT']
 Outputs = []
 for query in Queries:
@@ -181,8 +184,8 @@ for query in Queries:
         if len(query) == 0:
             q = query
         else:
-            q = transformation_query_to_postfixe(booleanOperators, 
-                transformation_lem_query_to_boolean(query))
+            q = transformation_query_to_postfixe(booleanOperators,
+                                                 transformation_lem_query_to_boolean(query))
             out = processing_boolean_query_with_inverted_index(
                 booleanOperators, q, inverted_index)
         print(f"### Query {query} -> {q}: OK ###")
@@ -199,7 +202,8 @@ for query in Queries:
 
 # 7 - Evaluer résultats
 
-## Load expected output
+# Load expected output
+
 
 def loadExpectedOutputs():
     loadedFiles = []
@@ -222,8 +226,10 @@ def loadExpectedOutputs():
         Outputs.append(current_output)
     return Outputs
 
+
 ExpectedOutputs = loadExpectedOutputs()
 print(ExpectedOutputs)
+
 
 def compareOutputs(expected, actual):
     # todo
