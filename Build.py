@@ -9,6 +9,7 @@ from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 from collections import OrderedDict
 from functools import lru_cache
+import sys
 
 # Config
 
@@ -86,8 +87,17 @@ f.close()
 def build_inverted_index(collection):
     '''builds the inverted index'''
     print("Parsing files and building inverted index")
+    filecount = len(collection)
+    current = 0
     inverted_index = {}
     for document in collection:
+
+        # Print progress
+        current += 1
+        if current % 100 == 0:
+            sys.stdout.write(f"Processing: {current} / {filecount}\r")
+            sys.stdout.flush()
+        
         for term in collection[document]:
             if term in inverted_index:
                 if document in inverted_index[term]:
@@ -97,6 +107,9 @@ def build_inverted_index(collection):
             else:
                 inverted_index[term] = {}
                 inverted_index[term][document] = 1
+
+    sys.stdout.write(f"Processing: {filecount} / {filecount}\r\n")
+    sys.stdout.flush()
     return inverted_index
 
 
