@@ -7,6 +7,8 @@ from tt import BooleanExpression
 import traceback
 import json
 
+# 1 - Loading the inverted Index
+
 
 def load_inverted_index_pickle(filename):
     with open(filename, 'rb') as fb:
@@ -16,14 +18,13 @@ def load_inverted_index_pickle(filename):
 
 inverted_index = load_inverted_index_pickle("inverted_index")
 
-# print(inverted_index['science'])
-
-# 4 - Parser les requetes
+# 2 - Parsing and formating queries
 
 
 def loadQueries():
     Queries = []
     stemmer = WordNetLemmatizer()
+    fullQuery = []
     stopWords = set(stopwords.words('english'))
     i = 0
     for i in range(1, 9):
@@ -38,17 +39,18 @@ def loadQueries():
                     # Lemmatization
                     query.append(stemmer.lemmatize(word.lower()))
             Queries.append(query)
+            fullQuery += query
+    # Adding a query concatenating all previous queries
+    Queries.append(list(set(fullQuery)))
     return Queries
 
 
 Queries = loadQueries()
 
-# print(Queries)
 
-# 5 - Executer des requetes
+# 3 - Executing queries
 
-# Mode Booléen
-
+# Boolean Mode
 
 def transformation_lem_query_to_boolean(query, operator='AND'):
     boolean_query = []
@@ -78,7 +80,7 @@ def transformation_query_to_postfixe(booleanOperators, query):
         ' '.join(abstract_query)).postfix_tokens
     return [matcher[key] for key in postfix_abstract]
 
-# Operateur AND sur posting listes
+# AND operator
 
 
 def merge_and_postings_list(posting_term1, posting_term2):
@@ -99,7 +101,7 @@ def merge_and_postings_list(posting_term1, posting_term2):
                 j = j+1
     return result
 
-# Operateur OR sur posting listes
+# OR operator
 
 
 def merge_or_postings_list(posting_term1, posting_term2):
@@ -123,7 +125,7 @@ def merge_or_postings_list(posting_term1, posting_term2):
     return result
 
 
-# Operateur AND NOT sur posting listes
+# AND NOT operator
 
 def merge_and_not_postings_list(posting_term1, posting_term2):
     result = []
@@ -155,12 +157,31 @@ def boolean_operator_processing_with_inverted_index(BoolOperator, posting_term1,
             posting_term1, posting_term2))
     return result
 
+# Custom exception to handle queries querying unknown words
+
+
+class MissingTerm(Exception):
+    """Exception raised for errors in the input.
+
+    Attributes:
+        expression -- input expression in which the error occurred
+        message -- explanation of the error
+    """
+
+    def __init__(self, expression, message):
+        self.expression = expression
+        self.message = message
+
 
 def processing_boolean_query_with_inverted_index(booleanOperators, query, inverted_index):
     evaluation_stack = []
     for term in query:
         if term.upper() not in booleanOperators:
-            evaluation_stack.append(inverted_index[term.lower()])
+            if inverted_index.get(term.lower()) is not None:
+                evaluation_stack.append(inverted_index[term.lower()])
+            else:
+                raise MissingTerm(
+                    "A term is missing form the inverted_index", term.lower())
         else:
             if term.upper() == "NOT":
                 operande = evaluation_stack.pop()
@@ -189,33 +210,38 @@ for query in Queries:
             out = processing_boolean_query_with_inverted_index(
                 booleanOperators, q, inverted_index)
         print(f"### Query {query} -> {q}: OK ###")
-        print(out)
-        print()
         Outputs.append(out)
+    except MissingTerm as err:
+        print(
+            f"### Query {query}: failed : Missing term ( {err.message} ) ###")
+        Outputs.append([])
     except Exception:
         print(f"### Query {query}: failed ###")
         print(traceback.format_exc())
         Outputs.append([])
 
-# 6 - Afficher Résultats
+# 4 - Evaluate results
 
-# Cf exemples dans Queries/ -> Liste ordonnée de n (?) documents
 
-# 7 - Evaluer résultats
+def loadFilenames():
+    loadedFiles = []
+    with open("Filenames.json", 'r') as f:
+        loadedFiles = json.load(f)
+    return loadedFiles
+
+
+loadedFiles = loadFilenames()
 
 # Load expected output
 
 
-def loadExpectedOutputs():
-    loadedFiles = []
-    with open("Filenames.json", 'r') as f:
-        loadedFiles = json.load(f)
-
+def loadExpectedOutputs(loadedFiles):
     fileIdx = {}
     for idx, filename in enumerate(loadedFiles):
         fileIdx[filename] = idx
     MissingFiles = 0
     Outputs = []
+    fullOutput = []
     i = 0
     for i in range(1, 9):
         current_output = []
@@ -227,26 +253,48 @@ def loadExpectedOutputs():
                 else:
                     MissingFiles += 1
         Outputs.append(current_output)
+        fullOutput += current_output
+    # We consider the full query expected output is a concatenation of all outputs
+    Outputs.append(list(set(fullOutput)))
     print("Missing files :", MissingFiles)
     return Outputs
 
 
-ExpectedOutputs = loadExpectedOutputs()
-# print(ExpectedOutputs)
+ExpectedOutputs = loadExpectedOutputs(loadedFiles)
 
 
-def compareOutputsBoolean(expected, actual):
+def compareOutputsBoolean(expected, actual, n):
     # With boolean queries, there are no notions of order
-    if len(expected) > 0 and len(actual) > 0:
-        intersected = len(set(expected).intersection(set(actual)))
-        return intersected/len(expected)
-    return 0
+    TruePositives = 0
+    for document in expected:
+        if document in actual:
+            TruePositives += 1
 
+    precision, recall, f1 = 0, 0, 0
+    if len(actual) > 0:
+        precision = TruePositives/len(actual)
+
+    if len(expected) > 0:
+        recall = TruePositives/len(expected)
+
+    if recall+precision > 0:
+        f1 = 2*(precision*recall)/(precision+recall)
+
+    accuracy = (TruePositives + (n - len(actual) -
+                                 len(expected) + TruePositives))/n
+    print('\t Precision = {:.2f}'.format(precision))
+    print('\t Recall = {:.2f}'.format(recall))
+    print('\t Accuracy = {:.2f}'.format(accuracy))
+    print('\t F1 Score = {:.2f}'.format(f1))
+    return
+
+
+n = len(loadedFiles)
 
 if (len(ExpectedOutputs) != len(Outputs) or len(Outputs) != len(Queries)):
-    print("Issue in Ouputs size.")
+    print("Ouput sizes not matching.")
 else:
     for idx, query in enumerate(Queries):
-        print("Query :", query)
-        print("Score :", compareOutputsBoolean(
-            ExpectedOutputs[idx], Outputs[idx]))
+        print("Query", idx, ":", query, "found",len(Outputs[idx]), "documents.")
+        compareOutputsBoolean(
+            ExpectedOutputs[idx], Outputs[idx], n)
