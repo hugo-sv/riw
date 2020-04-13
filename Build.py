@@ -8,12 +8,25 @@ from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 from collections import OrderedDict
+from functools import lru_cache
 
-# 1 - Import de la collection
+# Config
 
 MAX_FILES_TO_INDEX = 7000
+DATA_PATH = "Data/pa1-data/"
 
-def loadData(rootPath):
+# 1 - Import et processing de la collection
+
+# Like map(), but built to accept multiple functions
+def map_many(iterable, *functions):
+    if len(functions) == 0:
+        return iterable
+    if len(functions) == 1:
+        return map(functions[0], iterable)
+    return map_many(map(functions[0], iterable), *functions[1:])
+
+
+def loadData(rootPath, shouldKeep, *processors):
     '''loadData Loads the dataset at the given path.
     It must be in the following format : '''
     print("Loading the dataset")
@@ -35,69 +48,37 @@ def loadData(rootPath):
 
             if isfile(filePath):
                 with open(filePath, 'r') as f:
-                    shortPath = join(dirName, filename)
-
-                    # collection is already tokenized
-                    corpus[indexed] = f.read().split(' ')
-                    Filenames.append(shortPath)
+                    # skipping tokenization as collection is already tokenized
+                    corpus[indexed] = map_many(filter(shouldKeep, f.read().split(' ')), *processors)
+                    Filenames.append(join(dirName, filename))
                     indexed += 1
                     if indexed > MAX_FILES_TO_INDEX:
                         return corpus, Filenames
     return corpus, Filenames
 
+# Stop word remover
+stopWords = set(stopwords.words('english'))
+isNotStopWord = lambda word: word not in stopWords
 
-dataPath = "Data/pa1-data/"
-corpus, Filenames = loadData(dataPath)
+# Convert to lowercase
+lowerize = lambda word: word.lower()
+
+# We don't stem and go straight to lemmatization as it provides better results
+# Stemmer = PorterStemmer()
+# stem = lambda word: Stemmer.stem(word)
+
+# Lemmatizer
+# Using memoization (lru_cache) cache here gives a ~x4 speed-up
+Lemmatizer = WordNetLemmatizer()
+lemmatize = lru_cache(maxsize=None)(Lemmatizer.lemmatize)
+
+corpus, Filenames = loadData(DATA_PATH, isNotStopWord, lowerize, lemmatize)
 
 json = json.dumps(Filenames)
 f = open("Filenames.json", "w")
 f.write(json)
 f.close()
 
-# 2 - Processing de la collection
-
-
-def remove_stop_words(collection):
-    '''remove_stop_words Remove stop words (from Lab1.py)'''
-    print("Removing stop words")
-    stopWords = set(stopwords.words('english'))
-    collection_filtered = {}
-    for i in collection:
-        collection_filtered[i] = []
-        for j in collection[i]:
-            if j not in stopWords:
-                collection_filtered[i].append(j)
-    return collection_filtered
-
-
-corpus = remove_stop_words(corpus)
-
-
-def collection_stemming(segmented_collection):
-    print("Stemming the collection")
-    stemmed_collection = {}
-    stemmer = PorterStemmer()  # initialisation d'un stemmer
-    for i in segmented_collection:
-        stemmed_collection[i] = []
-        for j in segmented_collection[i]:
-            stemmed_collection[i].append(stemmer.stem(j.lower()))
-    return stemmed_collection
-
-
-def collection_lemmatize(segmented_collection):
-    print("Lemmatization of the collection")
-    lemmatized_collection = {}
-    stemmer = WordNetLemmatizer()  # initialisation d'un lemmatiseur
-    for i in segmented_collection:
-        lemmatized_collection[i] = []
-        for j in segmented_collection[i]:
-            lemmatized_collection[i].append(
-                stemmer.lemmatize(j.lower()))
-    return lemmatized_collection
-
-
-# Apply lemmatization only, as it provides better results
-corpus = collection_lemmatize(corpus)
 
 # 3 - Calculer la matrice d'occurences
 
