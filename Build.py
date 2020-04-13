@@ -8,150 +8,124 @@ from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 from collections import OrderedDict
+from functools import lru_cache
+import sys
+
+# Config
+
+DATA_PATH = "Data/pa1-data/"
 
 # 1 - Import de la collection
 
-MAX_FILES_TO_INDEX = 7000
+# Like map(), but built to accept multiple functions
 
-def loadData(rootPath):
-    '''loadData Loads the dataset at the given path.
-    It must be in the following format : '''
-    print("Loading the dataset")
-    Filenames = []
+
+def map_many(iterable, *functions):
+    if len(functions) == 0:
+        return iterable
+    if len(functions) == 1:
+        return map(functions[0], iterable)
+    return map_many(map(functions[0], iterable), *functions[1:])
+
+
+def loadData(rootPath, shouldKeep, *processors):
+    '''
+    loadData loads the dataset at the given path. It takes a 'shouldKeep' filter
+    function that can be used to filter out unwanted terms (e.g. stop words).
+    Each word will then go through the processors (in the order as they are
+    passed). Note that this function will return 'corpus' which is a slice of
+    iterators: when the function returns, the filters and processors will not
+    have been computed yet.
+    '''
+
+    print("Loading dataset")
+    filenames = []
     corpus = {}
-    indexed = 0
+    i = 0
 
     for dirName in sorted(listdir(rootPath)):
         dirPath = join(rootPath, dirName)
-
-        # skip files
-        if isfile(dirPath):
-            continue
-
-        print(f"Parsing directory {dirPath}...")
+        print(f"Loading files from {dirPath}...")
 
         for filename in listdir(dirPath):
-            filePath = join(dirPath, filename)
-
-            if isfile(filePath):
-                with open(filePath, 'r') as f:
-                    shortPath = join(dirName, filename)
-
-                    # collection is already tokenized
-                    corpus[indexed] = f.read().split(' ')
-                    Filenames.append(shortPath)
-                    indexed += 1
-                    if indexed > MAX_FILES_TO_INDEX:
-                        return corpus, Filenames
-    return corpus, Filenames
+            with open(join(dirPath, filename), 'r') as f:
+                filenames.append(join(dirName, filename))
+                # skipping tokenization as collection is already tokenized
+                corpus[i] = map_many(
+                    filter(shouldKeep, f.read().split(' ')), *processors)
+                i += 1
+    return corpus, filenames
 
 
-dataPath = "Data/pa1-data/"
-corpus, Filenames = loadData(dataPath)
-
-json = json.dumps(Filenames)
-f = open("Filenames.json", "w")
-f.write(json)
-f.close()
-
-# 2 - Processing de la collection
+# Stop word remover
+stopWords = set(stopwords.words('english'))
 
 
-def remove_stop_words(collection):
-    '''remove_stop_words Remove stop words (from Lab1.py)'''
-    print("Removing stop words")
-    stopWords = set(stopwords.words('english'))
-    collection_filtered = {}
-    for i in collection:
-        collection_filtered[i] = []
-        for j in collection[i]:
-            if j not in stopWords:
-                collection_filtered[i].append(j)
-    return collection_filtered
+def isNotStopWord(word): return word not in stopWords
+
+# Convert to lowercase
 
 
-corpus = remove_stop_words(corpus)
+def lowerize(word): return word.lower()
+
+# We don't stem and go straight to lemmatization as it provides better results
+# Stemmer = PorterStemmer()
+# stem = lambda word: Stemmer.stem(word)
 
 
-def collection_stemming(segmented_collection):
-    print("Stemming the collection")
-    stemmed_collection = {}
-    stemmer = PorterStemmer()  # initialisation d'un stemmer
-    for i in segmented_collection:
-        stemmed_collection[i] = []
-        for j in segmented_collection[i]:
-            stemmed_collection[i].append(stemmer.stem(j.lower()))
-    return stemmed_collection
+# Lemmatizer
+# Using memoization (lru_cache) cache here gives a significant speed-up
+Lemmatizer = WordNetLemmatizer()
+lemmatize = lru_cache(maxsize=None)(Lemmatizer.lemmatize)
+
+corpus, Filenames = loadData(DATA_PATH, isNotStopWord, lowerize, lemmatize)
 
 
-def collection_lemmatize(segmented_collection):
-    print("Lemmatization of the collection")
-    lemmatized_collection = {}
-    stemmer = WordNetLemmatizer()  # initialisation d'un lemmatiseur
-    for i in segmented_collection:
-        lemmatized_collection[i] = []
-        for j in segmented_collection[i]:
-            lemmatized_collection[i].append(
-                stemmer.lemmatize(j.lower()))
-    return lemmatized_collection
+# 2 - Calcul de l'index inversé
 
+def build_inverted_index(collection):
+    '''builds the inverted index'''
+    print("Parsing files and building inverted index")
+    filecount = len(collection)
+    current = 0
+    inverted_index = {}
+    for document in collection:
 
-# Apply lemmatization only, as it provides better results
-corpus = collection_lemmatize(corpus)
+        # Print progress
+        current += 1
+        if current % 100 == 0:
+            sys.stdout.write(f"Processing: {current} / {filecount}\r")
+            sys.stdout.flush()
 
-# 3 - Calculer la matrice d'occurences
-
-
-def build_inverted_index(collection, type_index):
-    '''builds the inverted index the requested type_index'''
-    print("Building inverted index")
-    inverted_index = OrderedDict()
-    if type_index == 1:
-        for document in collection:
-            for term in collection[document]:
-                if term in inverted_index.keys():
-                    if document not in inverted_index[term]:
-                        inverted_index[term].append(document)
+        for term in collection[document]:
+            if term in inverted_index:
+                if document in inverted_index[term]:
+                    inverted_index[term][document] += 1
                 else:
-                    inverted_index[term] = [document]
-    elif type_index == 2:
-        for document in collection:
-            for term in collection[document]:
-                if term in inverted_index.keys():
-                    if document in inverted_index[term].keys():
-                        inverted_index[term][document] = inverted_index[term][document] + 1
-                    else:
-                        inverted_index[term][document] = 1
-                else:
-                    inverted_index[term] = OrderedDict()
                     inverted_index[term][document] = 1
-    elif type_index == 3:
-        for document in collection:
-            n = 0
-            for term in collection[document]:
-                n = n+1
-                if term in inverted_index.keys():
-                    if document in inverted_index[term].keys():
-                        inverted_index[term][document][0] = inverted_index[term][document][0] + 1
-                        inverted_index[term][document][1].append(n)
-                    else:
-                        inverted_index[term][document] = [1, [n]]
-                else:
-                    inverted_index[term] = OrderedDict()
-                    inverted_index[term][document] = [1, [n]]
+            else:
+                inverted_index[term] = {document: 1}
+
+    sys.stdout.write(f"Processing: {filecount} / {filecount}\r\n")
+    sys.stdout.flush()
     return inverted_index
 
 
-inverted_index = build_inverted_index(corpus, 1)
+inverted_index = build_inverted_index(corpus)
 
-# 4 - Sauvegarder la matrice d'occurences et les Filenames.
 
+# 3 - Sauvegarde de l'index inversé et des Filenames
 
 def save_inverted_index_pickle(inverted_index, filename):
-    print("Saving the index")
+    print("Saving inverted index to disk...")
     with open(filename, "wb") as f:
         pickle.dump(inverted_index, f)
         f.close()
 
 
 save_inverted_index_pickle(inverted_index, "inverted_index")
+
+json = json.dumps(Filenames)
+f = open("Filenames.json", "w")
+f.write(json)
+f.close()

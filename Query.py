@@ -178,7 +178,7 @@ def processing_boolean_query_with_inverted_index(booleanOperators, query, invert
     for term in query:
         if term.upper() not in booleanOperators:
             if inverted_index.get(term.lower()) is not None:
-                evaluation_stack.append(inverted_index[term.lower()])
+                evaluation_stack.append(list(inverted_index[term.lower()].keys()))
             else:
                 raise MissingTerm(
                     "A term is missing form the inverted_index", term.lower())
