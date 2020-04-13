@@ -206,7 +206,7 @@ for query in Queries:
             q = query
         else:
             q = transformation_query_to_postfixe(booleanOperators,
-                                                 transformation_lem_query_to_boolean(query))
+                                                 transformation_lem_query_to_boolean(query, 'AND'))
             out = processing_boolean_query_with_inverted_index(
                 booleanOperators, q, inverted_index)
         print(f"### Query {query} -> {q}: OK ###")
@@ -295,6 +295,7 @@ if (len(ExpectedOutputs) != len(Outputs) or len(Outputs) != len(Queries)):
     print("Ouput sizes not matching.")
 else:
     for idx, query in enumerate(Queries):
-        print("Query", idx, ":", query, "found",len(Outputs[idx]), "documents.")
+        print("Query", idx, ":", query, "found",
+              len(Outputs[idx]), "documents.")
         compareOutputsBoolean(
             ExpectedOutputs[idx], Outputs[idx], n)
