@@ -13,10 +13,9 @@ import sys
 
 # Config
 
-MAX_FILES_TO_INDEX = 200000
 DATA_PATH = "Data/pa1-data/"
 
-# 1 - Import et processing de la collection
+# 1 - Import de la collection
 
 # Like map(), but built to accept multiple functions
 def map_many(iterable, *functions):
@@ -28,34 +27,31 @@ def map_many(iterable, *functions):
 
 
 def loadData(rootPath, shouldKeep, *processors):
-    '''loadData Loads the dataset at the given path.
-    It must be in the following format : '''
-    print("Loading the dataset")
-    Filenames = []
+    '''
+    loadData loads the dataset at the given path. It takes a 'shouldKeep' filter
+    function that can be used to filter out unwanted terms (e.g. stop words).
+    Each word will then go through the processors (in the order as they are
+    passed). Note that this function will return 'corpus' which is a slice of
+    iterators: when the function returns, the filters and processors will not
+    have been computed yet.
+    '''
+
+    print("Loading dataset")
+    filenames = []
     corpus = {}
-    indexed = 0
+    i = 0
 
     for dirName in sorted(listdir(rootPath)):
         dirPath = join(rootPath, dirName)
-
-        # skip files
-        if isfile(dirPath):
-            continue
-
         print(f"Loading files from {dirPath}...")
 
         for filename in listdir(dirPath):
-            filePath = join(dirPath, filename)
-
-            if isfile(filePath):
-                with open(filePath, 'r') as f:
-                    # skipping tokenization as collection is already tokenized
-                    corpus[indexed] = map_many(filter(shouldKeep, f.read().split(' ')), *processors)
-                    Filenames.append(join(dirName, filename))
-                    indexed += 1
-                    if indexed > MAX_FILES_TO_INDEX:
-                        return corpus, Filenames
-    return corpus, Filenames
+            with open(join(dirPath, filename), 'r') as f:
+                filenames.append(join(dirName, filename))
+                # skipping tokenization as collection is already tokenized
+                corpus[i] = map_many(filter(shouldKeep, f.read().split(' ')), *processors)
+                i += 1
+    return corpus, filenames
 
 # Stop word remover
 stopWords = set(stopwords.words('english'))
@@ -69,20 +65,14 @@ lowerize = lambda word: word.lower()
 # stem = lambda word: Stemmer.stem(word)
 
 # Lemmatizer
-# Using memoization (lru_cache) cache here gives a ~x4 speed-up
+# Using memoization (lru_cache) cache here gives a significant speed-up
 Lemmatizer = WordNetLemmatizer()
 lemmatize = lru_cache(maxsize=None)(Lemmatizer.lemmatize)
 
 corpus, Filenames = loadData(DATA_PATH, isNotStopWord, lowerize, lemmatize)
 
-json = json.dumps(Filenames)
-f = open("Filenames.json", "w")
-f.write(json)
-f.close()
 
-
-# 3 - Calculer la matrice d'occurences
-
+# 2 - Calcul de l'index inversé
 
 def build_inverted_index(collection):
     '''builds the inverted index'''
@@ -105,24 +95,27 @@ def build_inverted_index(collection):
                 else:
                     inverted_index[term][document] = 1
             else:
-                inverted_index[term] = {}
-                inverted_index[term][document] = 1
+                inverted_index[term] = {document: 1}
 
     sys.stdout.write(f"Processing: {filecount} / {filecount}\r\n")
     sys.stdout.flush()
     return inverted_index
 
-
 inverted_index = build_inverted_index(corpus)
 
-# 4 - Sauvegarder la matrice d'occurences et les Filenames.
 
+# 3 - Sauvegarde de l'index inversé et des Filenames
 
 def save_inverted_index_pickle(inverted_index, filename):
-    print("Saving the index")
+    print("Saving inverted index to disk...")
     with open(filename, "wb") as f:
         pickle.dump(inverted_index, f)
         f.close()
 
 
 save_inverted_index_pickle(inverted_index, "inverted_index")
+
+json = json.dumps(Filenames)
+f = open("Filenames.json", "w")
+f.write(json)
+f.close()
