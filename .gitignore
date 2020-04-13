@@ -8,4 +8,5 @@ __pycache__
 
 inverted_index
 Filenames.json
+Postings.json
 profile*
