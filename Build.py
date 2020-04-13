@@ -112,6 +112,9 @@ def build_inverted_index(collection):
 
 inverted_index = build_inverted_index(corpus)
 
+cache_info = lemmatize.cache_info()
+cache_hit_ratio = 100 * cache_info.hits / (cache_info.hits + cache_info.misses)
+print(f"lemmatize cache stats: {cache_info} (cache hit ratio: {cache_hit_ratio:.1f}%)")
 
 # 3 - Save inverted index and file names
 
