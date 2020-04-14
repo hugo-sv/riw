@@ -178,7 +178,8 @@ def processing_boolean_query_with_inverted_index(booleanOperators, query, invert
     for term in query:
         if term.upper() not in booleanOperators:
             if inverted_index.get(term.lower()) is not None:
-                evaluation_stack.append(list(inverted_index[term.lower()].keys()))
+                evaluation_stack.append(
+                    list(inverted_index[term.lower()].keys()))
             else:
                 raise MissingTerm(
                     "A term is missing form the inverted_index", term.lower())
@@ -295,7 +296,8 @@ if (len(ExpectedOutputs) != len(Outputs) or len(Outputs) != len(Queries)):
     print("Ouput sizes not matching.")
 else:
     for idx, query in enumerate(Queries):
-        print("Query", idx, ":", query, "found",
-              len(Outputs[idx]), "documents.")
-        compareOutputsBoolean(
-            ExpectedOutputs[idx], Outputs[idx], n)
+        if len(query) > 0:
+            print("Query", idx, ":", query, "found",
+                  len(Outputs[idx]), "documents.")
+            compareOutputsBoolean(
+                ExpectedOutputs[idx], Outputs[idx], n)

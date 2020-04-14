@@ -54,6 +54,31 @@ python3 1b_vectorial_query.py
 Either script will run each query in `Queries/dev_queries` and score its output against
 the reference output (located in `Queries/dev_output`).
 
+### Boolean Model
+
+Using `AND` boolean operator on each term of the query, this model will output documents containing each query terms.
+
+This model has a very good recall on short queries (around 0.99 on queries with a few words). Using the `OR` operator is not very useful as it greatly reduce our precision, which is the parameter we would like to improve (around 0.75 with `AND` operator and 0.15 with `OR`).
+
+However, when combining all example queries (6 non stop words terms) and expecting for the combination of all their expected document as a result, the `OR` operator is helpful, improving the f1 score from 0 to 0.88.
+
+### Vectorial Model
+
+With the vectorial model, we attribute a score to each document depending on how related they are to the query.
+Depending on the threshold, we can have different result in term of Precision and recall.
+This is why we plotted in our model the ROC curve for each queries in the data set :
+
+![ROC curve for Vectorial Model](ROC.png)
+
+Here are some results to compare the f1 score for different thresholds
+
+| Query \ f1 score                    | Boolean | Vectorial (0.25) | Vectorial (0.5) | Vectorial (0.75) | Vectorial (0.9) |
+| ----------------------------------- | ------- | ---------------- | --------------- | ---------------- | --------------- |
+| ['stanford', 'class']               | 0.85    | 0.75             | 0.75            | 0.72             | 0.64            |
+| ['stanford', 'student']             | 0.89    | 0.47             | 0.85            | 0.80             | 0.73            |
+| ['cool']                            | 0.23    | 0.23             | 0.23            | 0.23             | 0.23            |
+| ['stanford', 'computer', 'science'] | 0.83    | 0.30             | 0.34            | 0.61             | 0.71            |
+
 ## Performance considerations: loading data and indexing
 
 Our initial version of `0_build_index.py` was pretty naive, and therefore too slow to
