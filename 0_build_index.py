@@ -16,6 +16,7 @@ DATA_PATH = "Data/pa1-data/"
 
 # 1 - Import the dataset
 
+
 def map_many(iterable, *functions):
     '''Like map(), but built to accept multiple functions'''
 
@@ -38,7 +39,6 @@ def loadData(rootPath, shouldKeep, *processors):
 
     print("Loading dataset")
     filenames = []
-    postings = []
     corpus = {}
     i = 0
 
@@ -50,12 +50,10 @@ def loadData(rootPath, shouldKeep, *processors):
             with open(join(dirPath, filename), 'r') as f:
                 filenames.append(join(dirName, filename))
                 # skipping tokenization as collection is already tokenized
-                terms = map_many(
+                corpus[i] = map_many(
                     filter(shouldKeep, f.read().split(' ')), *processors)
-                postings.append(len(list(terms)))
-                corpus[i] = terms
                 i += 1
-    return corpus, filenames, postings
+    return corpus, filenames
 
 
 # Stop word remover
@@ -65,6 +63,8 @@ stopWords = set(stopwords.words('english'))
 def isNotStopWord(word): return word not in stopWords
 
 # Convert to lowercase
+
+
 def lowerize(word): return word.lower()
 
 # We don't stem and go straight to lemmatization as it provides better results
@@ -77,20 +77,20 @@ def lowerize(word): return word.lower()
 Lemmatizer = WordNetLemmatizer()
 lemmatize = lru_cache(maxsize=None)(Lemmatizer.lemmatize)
 
-corpus, Filenames, postings = loadData(
+corpus, Filenames = loadData(
     DATA_PATH, isNotStopWord, lowerize, lemmatize)
 
 
 # 2 - Build inverted index
 
 def build_inverted_index(collection):
-    '''builds the inverted index'''
+    '''builds the inverted index, and terms_per_document object'''
     print("Parsing files and building inverted index")
     filecount = len(collection)
     current = 0
     inverted_index = {}
+    terms_per_document = len(list(collection.keys()))*[0]
     for document in collection:
-
         # Print progress
         current += 1
         if current % 100 == 0:
@@ -98,6 +98,7 @@ def build_inverted_index(collection):
             stdout.flush()
 
         for term in collection[document]:
+            terms_per_document[document] += 1
             if term in inverted_index:
                 if document in inverted_index[term]:
                     inverted_index[term][document] += 1
@@ -108,10 +109,10 @@ def build_inverted_index(collection):
 
     stdout.write(f"Processing: {filecount} / {filecount}\r\n")
     stdout.flush()
-    return inverted_index
+    return inverted_index, terms_per_document
 
 
-inverted_index = build_inverted_index(corpus)
+inverted_index, terms_per_document = build_inverted_index(corpus)
 
 cache_info = lemmatize.cache_info()
 cache_hit_ratio = 100 * cache_info.hits / (cache_info.hits + cache_info.misses)
@@ -137,7 +138,7 @@ f.write(dump)
 f.close()
 
 # Exporting terms per document for vectorial models
-dump = json.dumps(postings)
-f = open("Postings.json", "w")
+dump = json.dumps(terms_per_document)
+f = open("terms_per_document.json", "w")
 f.write(dump)
 f.close()

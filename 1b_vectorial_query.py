@@ -18,7 +18,7 @@ def load_inverted_index_pickle(filename):
 
 def loadPostings():
     postings = []
-    with open("Postings.json", 'r') as f:
+    with open("terms_per_document.json", 'r') as f:
         postings = json.load(f)
     return postings
 
@@ -255,6 +255,11 @@ def PlotRoc(Queries, postings, inverted_index, bestScore):
     plt.xlabel("FPR")
     plt.ylabel("TPR")
     plt.show()
+
+# def PlotRoc(Queries, ExpectedOutputs):
+# More time-efficient way to plot ROC curves
+#     # using from sklearn import metrics
+#     # fpr, tpr, thresholds = metrics.roc_curve(y, scores, pos_label=2)
 
 
 PlotRoc(Queries, postings, inverted_index, bestScore)

@@ -35,8 +35,7 @@ This will load the dataset and create an inverted index of its contents. This
 process can take a bit of time (~1 min 40 sec on our setup) and use a decent
 amount of RAM (~2GB during our tests).
 
-It will output an `inverted_index` file of about 80 MB, as well as a
-`Filenames.json` file containing a mapping from document IDs to filenames.
+It will output an `inverted_index` file of about 80 MB, a `terms_per_document.json` file containing the total number of terms per document for the vectorial model, as well as a `Filenames.json` file containing a mapping from document IDs to filenames.
 
 ### 3. Running the default queries
 
@@ -68,16 +67,15 @@ We thus set out to improve its performance and started profiling its execution.
 
 We implemented a number of optimizations:
 
-* **reducing memory I/O:** initially, we loaded all the files, then removed the
+- **reducing memory I/O:** initially, we loaded all the files, then removed the
   stop words of each file, then lemmatized each word. We refactored this
   process, leveraging functional programming concepts (see the [`map_many`
   function](https://github.com/hugo-sv/riw/blob/b22301b45145f2ef23191d65042560f2de266a39/Build.py#L22-L27))
   to only do one memory write and one memory read per token (word).
-* **miscellaneous Pythonic optimizations:** in various occurences, we achieved
-  encouraging results by using somewhat faster Python directives (e.g. `key in
-  dict` instead of `key in dict.keys()`) and data structures (e.g. plain `dict`
+- **miscellaneous Pythonic optimizations:** in various occurences, we achieved
+  encouraging results by using somewhat faster Python directives (e.g. `key in dict` instead of `key in dict.keys()`) and data structures (e.g. plain `dict`
   instead of `OrderedDict`)
-* **caching lemmatization results:** we obtained a very significant speed-up by
+- **caching lemmatization results:** we obtained a very significant speed-up by
   [using memoization on the lemmatizing
   function](https://github.com/hugo-sv/riw/blob/b22301b45145f2ef23191d65042560f2de266a39/Build.py#L78)
   as the documents in the collection largely contain similar terms. The actual
