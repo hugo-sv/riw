@@ -13,6 +13,7 @@ from tt import BooleanExpression
 # The following parameter decides which boolean to use when combining the
 # different words of the query
 AND_vs_OR = "AND"
+print(f"using '{AND_vs_OR}' Boolean operator")
 
 # 1 - Loading the inverted Index
 
