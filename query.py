@@ -3,6 +3,7 @@ from nltk.stem import WordNetLemmatizer
 from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 import sys
+import traceback
 
 stemmer = WordNetLemmatizer()
 stopWords = set(stopwords.words('english'))
@@ -105,3 +106,31 @@ def DisplayResults(Queries, ExpectedOutputs, Outputs, loadedFiles):
                 print("Query", idx, ":", query, "found",
                       len(Outputs[idx]), "documents.")
                 DisplayMetrics(ExpectedOutputs[idx], Outputs[idx], n)
+
+
+def OutputQuery(query, output, loadedFiles, path, verbose=False):
+    result_filenames = [loadedFiles[j] for j in output]
+    if verbose:
+        print(f"\n### Query {query} ###")
+        print(result_filenames)
+    with open(path, 'w') as f:
+        for document in result_filenames:
+            f.write(document+"\n")
+    print("Result have been exported in " + path)
+
+
+def RunQueries(Queries, OutputFunction):
+    Outputs = []
+    for query in Queries:
+        # Running only non-empty queries
+        if len(query) > 0:
+            try:
+                out = OutputFunction(query)
+                Outputs.append(out)
+            except Exception:
+                print(f"### Query {query} : failed ###")
+                print(traceback.format_exc())
+                Outputs.append([])
+        else:
+            Outputs.append([])
+    return Outputs

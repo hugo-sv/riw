@@ -1,7 +1,6 @@
-import traceback
 from tt import BooleanExpression
 from utils import load_inverted_index_pickle, loadFilenames
-from query import process, loadQueries, loadExpectedOutputs, DisplayResults
+from query import process, loadQueries, loadExpectedOutputs, DisplayResults, OutputQuery, RunQueries
 
 # Config
 
@@ -15,12 +14,11 @@ print(f"using '{AND_vs_OR}' Boolean operator")
 inverted_index = load_inverted_index_pickle("inverted_index")
 
 # 2 - Parsing and formatting queries
+
 Queries, shouldScore = loadQueries()
 
+# 3 - Executing queries - Boolean mode
 
-# 3 - Executing queries
-
-# Boolean Mode
 
 def transformation_lem_query_to_boolean(query, operator='AND'):
     boolean_query = []
@@ -78,6 +76,10 @@ def merge_or_postings_list(posting_term1, posting_term2):
     result = []
     n = len(posting_term1)
     m = len(posting_term2)
+    if n == 0:
+        return posting_term2
+    if m == 0:
+        return posting_term1
     i = 0
     j = 0
     while i < n and j < m:
@@ -127,21 +129,6 @@ def boolean_operator_processing_with_inverted_index(BoolOperator, posting_term1,
             posting_term1, posting_term2))
     return result
 
-# Custom exception to handle queries querying unknown words
-
-
-class MissingTerm(Exception):
-    """Exception raised for errors in the input.
-
-    Attributes:
-        expression -- input expression in which the error occurred
-        message -- explanation of the error
-    """
-
-    def __init__(self, expression, message):
-        self.expression = expression
-        self.message = message
-
 
 def processing_boolean_query_with_inverted_index(booleanOperators, query, inverted_index):
     evaluation_stack = []
@@ -151,8 +138,7 @@ def processing_boolean_query_with_inverted_index(booleanOperators, query, invert
                 evaluation_stack.append(
                     list(inverted_index[term.lower()].keys()))
             else:
-                raise MissingTerm(
-                    "A term is missing form the inverted_index", term.lower())
+                evaluation_stack.append([])
         else:
             if term.upper() == "NOT":
                 operande = evaluation_stack.pop()
@@ -168,38 +154,27 @@ def processing_boolean_query_with_inverted_index(booleanOperators, query, invert
     return evaluation_stack.pop()
 
 
-booleanOperators = ['AND', 'OR', 'NOT']
-Outputs = []
-for query in Queries:
-    try:
-        q, out = [], []
-        if len(query) == 0:
-            q = query
-        else:
-            q = transformation_query_to_postfixe(booleanOperators,
-                                                 transformation_lem_query_to_boolean(query, AND_vs_OR))
-            out = processing_boolean_query_with_inverted_index(
-                booleanOperators, q, inverted_index)
-        Outputs.append(out)
-    except MissingTerm as err:
-        print(
-            f"### Query {query}: failed : Missing term ( {err.message} ) ###")
-        Outputs.append([])
-    except Exception:
-        print(f"### Query {query}: failed ###")
-        print(traceback.format_exc())
-        Outputs.append([])
+def GetOutputFunction(inverted_index, AND_vs_OR):
+    booleanOperators = ['AND', 'OR', 'NOT']
+
+    def OutputFunction(query):
+        q = transformation_query_to_postfixe(
+            booleanOperators, transformation_lem_query_to_boolean(query, AND_vs_OR))
+        return processing_boolean_query_with_inverted_index(booleanOperators, q, inverted_index)
+    return OutputFunction
+
+
+Outputs = RunQueries(Queries, GetOutputFunction(inverted_index, AND_vs_OR))
 
 # 4 - Evaluate results
 
+loadedFiles = loadFilenames()
+
 if not shouldScore:
     for i, query in enumerate(Queries):
-        print(f"\n### Query {query} ###")
-        print(Outputs[i])
+        OutputQuery(query, Outputs[i], loadedFiles,
+                    "Queries/custom_output/boolean_"+'-'.join(query)+".out")
     exit()
-
-
-loadedFiles = loadFilenames()
 
 # Load expected output
 

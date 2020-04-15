@@ -1,9 +1,8 @@
-import traceback
 import math
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 from utils import load_inverted_index_pickle, loadTermsPerDocument, loadFilenames
-from query import process, loadQueries, loadExpectedOutputs, DisplayMetrics, DisplayResults
+from query import process, loadQueries, loadExpectedOutputs, DisplayMetrics, DisplayResults, OutputQuery, RunQueries
 
 
 # 1 - Loading the inverted Index and terms_per_document data
@@ -15,8 +14,9 @@ terms_per_document = loadTermsPerDocument()
 
 Queries, shouldScore = loadQueries()
 
+# 3 - Executing queries - Vectorial mode
 
-# 3 - Executing queries
+
 def tf(term, posting, inverted_index, terms_per_document):
     if inverted_index.get(term) is None:
         return 0
@@ -54,7 +54,10 @@ def GetPostingsScore(query, terms_per_document, inverted_index):
         term_query_weight = (1/len(query)) * idf(term, inverted_index,
                                                  terms_per_document)
         query_norm += term_query_weight**2
-        L = list(inverted_index[term.lower()].keys())
+        if inverted_index.get(term.lower()) is None:
+            L = []
+        else:
+            L = list(inverted_index[term.lower()].keys())
         for posting in L:
             # Using tf-idf to compute term weight in the document
             term_document_weight = tf_idf(
@@ -73,34 +76,30 @@ def GetSortedBestDocuments(Scores, threshold):
     # Return document ids having a score > threshold, sorted by score
     FilteredScores = dict(
         filter(lambda elem: elem[1] > threshold, Scores.items()))
-    return [k for k, v in sorted(FilteredScores.items(), key=lambda item: item[1])]
+    return [k for k, v in sorted(FilteredScores.items(), key=lambda item: item[1], reverse=True)]
 
 
-Outputs = []
+def GetOutputFunction(terms_per_document, inverted_index, Threshold):
+    def OutputFunction(query):
+        Scores = GetPostingsScore(
+            query, terms_per_document, inverted_index)
+        return GetSortedBestDocuments(Scores, Threshold)
+    return OutputFunction
+
+
 Threshold = 0.5
-for query in Queries:
-    if len(query) > 0:
-        try:
-            Scores = GetPostingsScore(
-                query, terms_per_document, inverted_index)
-            out = GetSortedBestDocuments(Scores, Threshold)
-            Outputs.append(out)
-        except Exception:
-            print(f"### Query {query} : failed ###")
-            print(traceback.format_exc())
-            Outputs.append([])
-    else:
-        Outputs.append([])
+Outputs = RunQueries(Queries, GetOutputFunction(
+    terms_per_document, inverted_index, Threshold))
 
 # 4 - Evaluate results
 
+loadedFiles = loadFilenames()
+
 if not shouldScore:
     for i, query in enumerate(Queries):
-        print(f"\n### Query {query} ###")
-        print(Outputs[i])
+        OutputQuery(query, Outputs[i], loadedFiles, "Queries/custom_output/vectorial_"+str(
+            Threshold)+"_"+'-'.join(query)+".out")
     exit()
-
-loadedFiles = loadFilenames()
 
 # Load expected output
 
