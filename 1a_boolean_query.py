@@ -18,26 +18,26 @@ def load_inverted_index_pickle(filename):
 
 inverted_index = load_inverted_index_pickle("inverted_index")
 
-# 2 - Parsing and formating queries
+# 2 - Parsing and formatting queries
+
+stemmer = WordNetLemmatizer()
+stopWords = set(stopwords.words('english'))
+def process(query):
+    res = []
+    tokenized = word_tokenize(query)
+    for word in tokenized:
+        if word not in stopWords:
+            res.append(stemmer.lemmatize(word.lower()))
+    return res
 
 
 def loadQueries():
     Queries = []
-    stemmer = WordNetLemmatizer()
     fullQuery = []
-    stopWords = set(stopwords.words('english'))
     i = 0
     for i in range(1, 9):
         with open("Queries/dev_queries/query."+str(i), 'r') as f:
-            raw_query = f.read()
-            # Tokenize
-            tokenized_query = word_tokenize(raw_query)
-            query = []
-            for word in tokenized_query:
-                # Remove Stop words
-                if word not in stopWords:
-                    # Lemmatization
-                    query.append(stemmer.lemmatize(word.lower()))
+            query = process(f.read())
             Queries.append(query)
             fullQuery += query
     # Adding a query concatenating all previous queries
