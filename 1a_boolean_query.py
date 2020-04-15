@@ -312,7 +312,7 @@ def compareOutputsBoolean(expected, actual, n):
 n = len(loadedFiles)
 
 if (len(ExpectedOutputs) != len(Outputs) or len(Outputs) != len(Queries)):
-    print("Ouput sizes not matching.")
+    print("Output sizes not matching.")
 else:
     for idx, query in enumerate(Queries):
         if len(query) > 0:

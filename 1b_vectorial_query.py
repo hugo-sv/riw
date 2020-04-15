@@ -194,7 +194,7 @@ def DisplayMetrics(expected, actual, n):
 n = len(loadedFiles)
 
 if (len(ExpectedOutputs) != len(Outputs) or len(Outputs) != len(Queries)):
-    print("Ouput sizes not matching : ", len(
+    print("Output sizes not matching : ", len(
         ExpectedOutputs), len(Outputs), len(Queries))
 else:
     for idx, query in enumerate(Queries):
