@@ -1,70 +1,17 @@
-import pickle
-import sys
-from nltk.tokenize import word_tokenize
-from nltk.stem import WordNetLemmatizer
-from nltk.corpus import stopwords
 import traceback
-import json
 import math
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
+from utils import load_inverted_index_pickle, loadTermsPerDocument, loadFilenames
+from query import process, loadQueries, loadExpectedOutputs, DisplayMetrics
+
 
 # 1 - Loading the inverted Index and terms_per_document data
-
-
-def load_inverted_index_pickle(filename):
-    with open(filename, 'rb') as fb:
-        index = pickle.load(fb)
-        return index
-
-
-def loadTermsPerDocument():
-    terms_per_document = []
-    with open("terms_per_document.json", 'r') as f:
-        terms_per_document = json.load(f)
-    return terms_per_document
-
 
 inverted_index = load_inverted_index_pickle("inverted_index")
 terms_per_document = loadTermsPerDocument()
 
 # 2 - Parsing and formatting queries
-
-
-stemmer = WordNetLemmatizer()
-stopWords = set(stopwords.words('english'))
-def process(query):
-    res = []
-    tokenized = word_tokenize(query)
-    for word in tokenized:
-        if word not in stopWords:
-            res.append(stemmer.lemmatize(word.lower()))
-    return res
-
-
-def loadQueries():
-    Queries = []
-    default_queries_path = "Queries/dev_queries"
-    shouldScore = True
-
-    args = sys.argv[1:]
-    if len(args) > 0:
-        print("query detected in CLI argument -- skipping default queries")
-        # disable output scoring:
-        # we have nothing to compare the results of these queries against
-        shouldScore = False
-        for query in args:
-            Queries.append(process(query))
-    else:
-        print(f"no query passed in CLI argument -- loading from {default_queries_path}")
-        i = 0
-        for i in range(1, 9):
-            with open(f"{default_queries_path}/query.{i}", 'r') as f:
-                query = process(f.read())
-                Queries.append(query)
-
-    return Queries, shouldScore
-
 
 Queries, shouldScore = loadQueries()
 
@@ -153,62 +100,11 @@ if not shouldScore:
         print(Outputs[i])
     exit()
 
-def loadFilenames():
-    loadedFiles = []
-    with open("Filenames.json", 'r') as f:
-        loadedFiles = json.load(f)
-    return loadedFiles
-
-
 loadedFiles = loadFilenames()
 
 # Load expected output
 
-
-def loadExpectedOutputs(loadedFiles):
-    fileIdx = {}
-    for idx, filename in enumerate(loadedFiles):
-        fileIdx[filename] = idx
-    MissingFiles = 0
-    Outputs = []
-    i = 0
-    for i in range(1, 9):
-        current_output = []
-        with open(f"Queries/dev_output/{i}.out", 'r') as f:
-            for line in f:
-                parsed_line = line.rstrip('\n')
-                if parsed_line in fileIdx:
-                    current_output.append(fileIdx[parsed_line])
-                else:
-                    MissingFiles += 1
-        Outputs.append(current_output)
-    print("Missing files :", MissingFiles)
-    return Outputs
-
-
 ExpectedOutputs = loadExpectedOutputs(loadedFiles)
-
-
-def DisplayMetrics(expected, actual, n):
-    TruePositives = len(set(actual).intersection(set(expected)))
-
-    precision, recall, f1 = 0, 0, 0
-    if len(actual) > 0:
-        precision = TruePositives/len(actual)
-
-    if len(expected) > 0:
-        recall = TruePositives/len(expected)
-
-    if recall+precision > 0:
-        f1 = 2*(precision*recall)/(precision+recall)
-
-    accuracy = (TruePositives + (n - len(actual) -
-                                 len(expected) + TruePositives))/n
-    print('\t Precision = {:.2f}'.format(precision))
-    print('\t Recall = {:.2f}'.format(recall))
-    print('\t Accuracy = {:.2f}'.format(accuracy))
-    print('\t F1 Score = {:.2f}'.format(f1))
-    return
 
 
 n = len(loadedFiles)
