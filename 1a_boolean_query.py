@@ -8,6 +8,12 @@ from nltk.stem import PorterStemmer
 from nltk.corpus import stopwords
 from tt import BooleanExpression
 
+# Config
+
+# The following parameter decides which boolean to use when combining the
+# different words of the query
+AND_vs_OR = "AND"
+
 # 1 - Loading the inverted Index
 
 
@@ -222,7 +228,7 @@ for query in Queries:
             q = query
         else:
             q = transformation_query_to_postfixe(booleanOperators,
-                                                 transformation_lem_query_to_boolean(query, 'AND'))
+                                                 transformation_lem_query_to_boolean(query, AND_vs_OR))
             out = processing_boolean_query_with_inverted_index(
                 booleanOperators, q, inverted_index)
         Outputs.append(out)
