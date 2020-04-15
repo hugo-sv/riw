@@ -126,11 +126,11 @@ presented below:
 
 | Query                                                           | f1 score - Boolean with AND | f1 score - Boolean with OR |
 | --------------------------------------------------------------- | :-------------------------: | :------------------------: |
-| ['stanford', 'class']                                           |            **0.85**             |            0.15            |
-| ['stanford', 'student']                                         |            **0.89**             |            0.47            |
+| ['stanford', 'class']                                           |          **0.85**           |            0.15            |
+| ['stanford', 'student']                                         |          **0.89**           |            0.47            |
 | ['cool']                                                        |            0.23             |            0.23            |
-| ['stanford', 'computer', 'science']                             |            **0.83**             |            0.11            |
-| ['class', 'cool', 'science', 'student', 'computer', 'stanford'] |            0.00             |            0.88            |
+| ['stanford', 'computer', 'science']                             |          **0.83**           |            0.11            |
+| ['class', 'cool', 'science', 'student', 'computer', 'stanford'] |            0.00             |          **0.88**          |
 
 ### Vectorial Model
 
@@ -144,11 +144,11 @@ ROC curve for each queries in the data set:
 Here is a comparison of the f1 score for different thresholds:
 
 | Query \ f1 score                    | Boolean with 'AND' | Vectorial (0.25) | Vectorial (0.5) | Vectorial (0.75) | Vectorial (0.9) |
-| ----------------------------------- | :-----: | :--------------: | :-------------: | :--------------: | :-------------: |
-| ['stanford', 'class']               |  0.85   |       0.75       |      0.75       |       0.72       |      0.64       |
-| ['stanford', 'student']             |  0.89   |       0.47       |      0.85       |       0.80       |      0.73       |
-| ['cool']                            |  0.23   |       0.23       |      0.23       |       0.23       |      0.23       |
-| ['stanford', 'computer', 'science'] |  0.83   |       0.30       |      0.34       |       0.61       |      0.71       |
+| ----------------------------------- | :----------------: | :--------------: | :-------------: | :--------------: | :-------------: |
+| ['stanford', 'class']               |        0.85        |       0.75       |      0.75       |       0.72       |      0.64       |
+| ['stanford', 'student']             |        0.89        |       0.47       |      0.85       |       0.80       |      0.73       |
+| ['cool']                            |        0.23        |       0.23       |      0.23       |       0.23       |      0.23       |
+| ['stanford', 'computer', 'science'] |        0.83        |       0.30       |      0.34       |       0.61       |      0.71       |
 
 ## Performance considerations: loading data and indexing
 
