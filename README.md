@@ -58,26 +58,54 @@ the reference output (located in `Queries/dev_output`).
 
 Using `AND` boolean operator on each term of the query, this model will output documents containing each query terms.
 
-This model has a very good recall on short queries (around 0.99 on queries with a few words). Using the `OR` operator is not very useful as it greatly reduce our precision, which is the parameter we would like to improve (around 0.75 with `AND` operator and 0.15 with `OR`).
+The results of the boolean model with the `AND` operator are presented below:
 
-However, when combining all example queries (6 non stop words terms) and expecting for the combination of all their expected document as a result, the `OR` operator is helpful, improving the f1 score from 0 to 0.88.
+| Query                                                           | Precision | Recall | Accuracy | f1 score |
+| --------------------------------------------------------------- | :-------: | :----: | :------: | :------: |
+| ['stanford', 'class']                                           |   0.65    |  1.00  |   0.97   |   0.79   |
+| ['stanford', 'student']                                         |   0.84    |  1.00  |   0.95   |   0.91   |
+| ['cool']                                                        |   0.06    |  1.00  |   1.00   |   0.11   |
+| ['stanford', 'computer', 'science']                             |   0.89    |  1.00  |   1.00   |   0.94   |
+| ['class', 'cool', 'science', 'student', 'computer', 'stanford'] |   1.00    |  0.00  |   0.13   |   0.00   |
+
+This model has a very good recall on short queries (around 0.99 on queries with a few words).
+
+Using the `OR` operator is not very useful as it greatly reduces our precision, which is the parameter we would like to improve (around 0.75 with `AND` operator and 0.15 with `OR`). The results for the OR operator are presented below:
+
+| Query                                                           | Precision | Recall | Accuracy | f1 score |
+| --------------------------------------------------------------- | :-------: | :----: | :------: | :------: |
+| ['stanford', 'class']                                           |   0.08    |  1.00  |   0.32   |   0.15   |
+| ['stanford', 'student']                                         |   0.31    |  1.00  |   0.49   |   0.47   |
+| ['cool']                                                        |   0.13    |  0.98  |   1.00   |   0.23   |
+| ['stanford', 'computer', 'science']                             |   0.06    |  1.00  |   0.30   |   0.11   |
+| ['class', 'cool', 'science', 'student', 'computer', 'stanford'] |   0.94    |  0.83  |   0.80   |   0.88   |
+
+However, when combining all example queries (6 terms after removing stop words) and combining each of their expected output, the `OR` operator is helpful, improving the f1 score from 0 to 0.88. The f1 score comparison for each query is presented below:
+
+| Query                                                           | f1 score - Boolean with AND | f1 score - Boolean with OR |
+| --------------------------------------------------------------- | :-------------------------: | :------------------------: |
+| ['stanford', 'class']                                           |          **0.79**           |            0.15            |
+| ['stanford', 'student']                                         |          **0.91**           |            0.47            |
+| ['cool']                                                        |            0.11             |          **0.23**          |
+| ['stanford', 'computer', 'science']                             |          **0.94**           |            0.11            |
+| ['class', 'cool', 'science', 'student', 'computer', 'stanford'] |            0.00             |          **0.88**          |
 
 ### Vectorial Model
 
 With the vectorial model, we attribute a score to each document depending on how related they are to the query.
-Depending on the threshold, we can have different result in term of Precision and recall.
-This is why we plotted in our model the ROC curve for each queries in the data set :
+Depending on the threshold, we can have different result in term of precision and recall.
+This is why we plotted in our model the ROC curve for each queries in the data set:
 
 ![ROC curve for Vectorial Model](ROC.png)
 
-Here are some results to compare the f1 score for different thresholds
+Here is a comparison of the f1 score for different thresholds:
 
 | Query \ f1 score                    | Boolean | Vectorial (0.25) | Vectorial (0.5) | Vectorial (0.75) | Vectorial (0.9) |
-| ----------------------------------- | ------- | ---------------- | --------------- | ---------------- | --------------- |
-| ['stanford', 'class']               | 0.85    | 0.75             | 0.75            | 0.72             | 0.64            |
-| ['stanford', 'student']             | 0.89    | 0.47             | 0.85            | 0.80             | 0.73            |
-| ['cool']                            | 0.23    | 0.23             | 0.23            | 0.23             | 0.23            |
-| ['stanford', 'computer', 'science'] | 0.83    | 0.30             | 0.34            | 0.61             | 0.71            |
+| ----------------------------------- | :-----: | :--------------: | :-------------: | :--------------: | :-------------: |
+| ['stanford', 'class']               |  0.85   |       0.75       |      0.75       |       0.72       |      0.64       |
+| ['stanford', 'student']             |  0.89   |       0.47       |      0.85       |       0.80       |      0.73       |
+| ['cool']                            |  0.23   |       0.23       |      0.23       |       0.23       |      0.23       |
+| ['stanford', 'computer', 'science'] |  0.83   |       0.30       |      0.34       |       0.61       |      0.71       |
 
 ## Performance considerations: loading data and indexing
 
