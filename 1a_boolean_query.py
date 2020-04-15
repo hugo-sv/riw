@@ -1,7 +1,7 @@
 import traceback
 from tt import BooleanExpression
 from utils import load_inverted_index_pickle, loadFilenames
-from query import process, loadQueries, loadExpectedOutputs, DisplayMetrics
+from query import process, loadQueries, loadExpectedOutputs, DisplayResults
 
 # Config
 
@@ -205,13 +205,4 @@ loadedFiles = loadFilenames()
 
 ExpectedOutputs = loadExpectedOutputs(loadedFiles)
 
-n = len(loadedFiles)
-
-if (len(ExpectedOutputs) != len(Outputs) or len(Outputs) != len(Queries)):
-    print("Output sizes not matching.")
-else:
-    for idx, query in enumerate(Queries):
-        if len(query) > 0:
-            print("Query", idx, ":", query, "found",
-                  len(Outputs[idx]), "documents.")
-            DisplayMetrics(ExpectedOutputs[idx], Outputs[idx], n)
+DisplayResults(Queries, ExpectedOutputs, Outputs, loadedFiles)

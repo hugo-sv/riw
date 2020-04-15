@@ -3,7 +3,7 @@ import math
 import matplotlib.pyplot as plt
 from sklearn.metrics import roc_curve, auc
 from utils import load_inverted_index_pickle, loadTermsPerDocument, loadFilenames
-from query import process, loadQueries, loadExpectedOutputs, DisplayMetrics
+from query import process, loadQueries, loadExpectedOutputs, DisplayMetrics, DisplayResults
 
 
 # 1 - Loading the inverted Index and terms_per_document data
@@ -107,18 +107,7 @@ loadedFiles = loadFilenames()
 ExpectedOutputs = loadExpectedOutputs(loadedFiles)
 
 
-n = len(loadedFiles)
-
-if (len(ExpectedOutputs) != len(Outputs) or len(Outputs) != len(Queries)):
-    print("Output sizes not matching : ", len(
-        ExpectedOutputs), len(Outputs), len(Queries))
-else:
-    for idx, query in enumerate(Queries):
-        if len(query) > 0:
-            print("Query", idx, ":", query, "found",
-                  len(Outputs[idx]), "documents.")
-            DisplayMetrics(
-                ExpectedOutputs[idx], Outputs[idx], n)
+DisplayResults(Queries, ExpectedOutputs, Outputs, loadedFiles)
 
 
 # Plotting ROC curves

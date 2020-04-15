@@ -91,3 +91,17 @@ def DisplayMetrics(expected, actual, n):
     print('\t Accuracy = {:.2f}'.format(accuracy))
     print('\t F1 Score = {:.2f}'.format(f1))
     return
+
+
+def DisplayResults(Queries, ExpectedOutputs, Outputs, loadedFiles):
+    n = len(loadedFiles)
+
+    if (len(ExpectedOutputs) != len(Outputs) or len(Outputs) != len(Queries)):
+        print("Output sizes not matching : ", len(
+            ExpectedOutputs), len(Outputs), len(Queries))
+    else:
+        for idx, query in enumerate(Queries):
+            if len(query) > 0:
+                print("Query", idx, ":", query, "found",
+                      len(Outputs[idx]), "documents.")
+                DisplayMetrics(ExpectedOutputs[idx], Outputs[idx], n)

@@ -5,11 +5,9 @@ boolean and vectorial models.
 
 ## Requirements
 
-1. This project **_requires_** Python 3.7+ (because it relies on [ordered dicts by default](https://stackoverflow.com/a/40007169/3865626
-), without using `OrderedDict` for performance considerations)
+1. This project **_requires_** Python 3.7+ (because it relies on [ordered dicts by default](https://stackoverflow.com/a/40007169/3865626), without using `OrderedDict` for performance considerations)
 2. Install dependencies by running: `pip3 install -r requirements.txt`
-3. Make sure that you have the necessary `nltk` data by running: `python3 -m
-   nltk.downloader stopwords punkt wordnet`
+3. Make sure that you have the necessary `nltk` data by running: `python3 -m nltk.downloader stopwords punkt wordnet`
 
 ## Usage
 
@@ -121,8 +119,7 @@ and 0.15 with `OR`). The results for the OR operator are presented below:
 
 However, when combining all example queries (6 terms after removing stop words)
 and combining each of their expected output, the `OR` operator is helpful,
-improving the f1 score from 0 to 0.88. The f1 score comparison for each query is
-presented below:
+improving the f1 score from 0 to 0.88. The f1 score comparison for each query is presented below:
 
 | Query                                                           | f1 score - Boolean with AND | f1 score - Boolean with OR |
 | --------------------------------------------------------------- | :-------------------------: | :------------------------: |
@@ -139,7 +136,7 @@ related they are to the query. Depending on the threshold, we can have different
 result in term of precision and recall. This is why we plotted in our model the
 ROC curve for each queries in the data set:
 
-![ROC curve for Vectorial Model](ROC.png)
+![ROC curve for Vectorial Model](Doc/ROC.png)
 
 Here is a comparison of the f1 score for different thresholds:
 
@@ -169,8 +166,7 @@ We implemented a number of optimizations:
   function](https://github.com/hugo-sv/riw/blob/b22301b45145f2ef23191d65042560f2de266a39/Build.py#L22-L27))
   to only do one memory write and one memory read per token (word).
 - **miscellaneous Pythonic optimizations:** in various occurences, we achieved
-  encouraging results by using somewhat faster Python directives (e.g. `key in
-  dict` instead of `key in dict.keys()`) and data structures (e.g. plain `dict`
+  encouraging results by using somewhat faster Python directives (e.g. `key in dict` instead of `key in dict.keys()`) and data structures (e.g. plain `dict`
   instead of `OrderedDict`)
 - **caching lemmatization results:** we obtained a very significant speed-up by
   [using memoization on the lemmatizing
