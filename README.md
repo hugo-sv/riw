@@ -98,10 +98,10 @@ The results of the boolean model with the `AND` operator are presented below:
 
 | Query                                                           | Precision | Recall | Accuracy | f1 score |
 | --------------------------------------------------------------- | :-------: | :----: | :------: | :------: |
-| ['stanford', 'class']                                           |   0.65    |  1.00  |   0.97   |   0.79   |
-| ['stanford', 'student']                                         |   0.84    |  1.00  |   0.95   |   0.91   |
-| ['cool']                                                        |   0.06    |  1.00  |   1.00   |   0.11   |
-| ['stanford', 'computer', 'science']                             |   0.89    |  1.00  |   1.00   |   0.94   |
+| ['stanford', 'class']                                           |   0.74    |  1.00  |   0.98   |   0.85   |
+| ['stanford', 'student']                                         |   0.80    |  1.00  |   0.94   |   0.89   |
+| ['cool']                                                        |   0.13    |  0.98  |   1.00   |   0.23   |
+| ['stanford', 'computer', 'science']                             |   0.72    |  0.98  |   0.98   |   0.83   |
 | ['class', 'cool', 'science', 'student', 'computer', 'stanford'] |   1.00    |  0.00  |   0.13   |   0.00   |
 
 This model has a very good recall on short queries (around 0.99 on queries with
@@ -126,11 +126,11 @@ presented below:
 
 | Query                                                           | f1 score - Boolean with AND | f1 score - Boolean with OR |
 | --------------------------------------------------------------- | :-------------------------: | :------------------------: |
-| ['stanford', 'class']                                           |          **0.79**           |            0.15            |
-| ['stanford', 'student']                                         |          **0.91**           |            0.47            |
-| ['cool']                                                        |            0.11             |          **0.23**          |
-| ['stanford', 'computer', 'science']                             |          **0.94**           |            0.11            |
-| ['class', 'cool', 'science', 'student', 'computer', 'stanford'] |            0.00             |          **0.88**          |
+| ['stanford', 'class']                                           |            **0.85**             |            0.15            |
+| ['stanford', 'student']                                         |            **0.89**             |            0.47            |
+| ['cool']                                                        |            0.23             |            0.23            |
+| ['stanford', 'computer', 'science']                             |            **0.83**             |            0.11            |
+| ['class', 'cool', 'science', 'student', 'computer', 'stanford'] |            0.00             |            0.88            |
 
 ### Vectorial Model
 
@@ -143,7 +143,7 @@ ROC curve for each queries in the data set:
 
 Here is a comparison of the f1 score for different thresholds:
 
-| Query \ f1 score                    | Boolean | Vectorial (0.25) | Vectorial (0.5) | Vectorial (0.75) | Vectorial (0.9) |
+| Query \ f1 score                    | Boolean with 'AND' | Vectorial (0.25) | Vectorial (0.5) | Vectorial (0.75) | Vectorial (0.9) |
 | ----------------------------------- | :-----: | :--------------: | :-------------: | :--------------: | :-------------: |
 | ['stanford', 'class']               |  0.85   |       0.75       |      0.75       |       0.72       |      0.64       |
 | ['stanford', 'student']             |  0.89   |       0.47       |      0.85       |       0.80       |      0.73       |
