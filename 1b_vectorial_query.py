@@ -1,4 +1,5 @@
 import pickle
+import sys
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
 from nltk.corpus import stopwords
@@ -27,30 +28,45 @@ def loadTermsPerDocument():
 inverted_index = load_inverted_index_pickle("inverted_index")
 terms_per_document = loadTermsPerDocument()
 
-# 2 - Parsing and formating queries
+# 2 - Parsing and formatting queries
+
+
+stemmer = WordNetLemmatizer()
+stopWords = set(stopwords.words('english'))
+def process(query):
+    res = []
+    tokenized = word_tokenize(query)
+    for word in tokenized:
+        if word not in stopWords:
+            res.append(stemmer.lemmatize(word.lower()))
+    return res
 
 
 def loadQueries():
     Queries = []
-    stemmer = WordNetLemmatizer()
-    stopWords = set(stopwords.words('english'))
-    i = 0
-    for i in range(1, 9):
-        with open("Queries/dev_queries/query."+str(i), 'r') as f:
-            raw_query = f.read()
-            # Tokenize
-            tokenized_query = word_tokenize(raw_query)
-            query = []
-            for word in tokenized_query:
-                # Remove Stop words
-                if word not in stopWords:
-                    # Lemmatization
-                    query.append(stemmer.lemmatize(word.lower()))
-            Queries.append(query)
-    return Queries
+    default_queries_path = "Queries/dev_queries"
+    shouldScore = True
+
+    args = sys.argv[1:]
+    if len(args) > 0:
+        print("query detected in CLI argument -- skipping default queries")
+        # disable output scoring:
+        # we have nothing to compare the results of these queries against
+        shouldScore = False
+        for query in args:
+            Queries.append(process(query))
+    else:
+        print(f"no query passed in CLI argument -- loading from {default_queries_path}")
+        i = 0
+        for i in range(1, 9):
+            with open(f"{default_queries_path}/query.{i}", 'r') as f:
+                query = process(f.read())
+                Queries.append(query)
+
+    return Queries, shouldScore
 
 
-Queries = loadQueries()
+Queries, shouldScore = loadQueries()
 
 
 # 3 - Executing queries
@@ -121,7 +137,6 @@ for query in Queries:
             Scores = GetPostingsScore(
                 query, terms_per_document, inverted_index)
             out = GetSortedBestDocuments(Scores, Threshold)
-            print(f"### Query {query} : OK with {len(out)} results ###")
             Outputs.append(out)
         except Exception:
             print(f"### Query {query} : failed ###")
@@ -132,6 +147,11 @@ for query in Queries:
 
 # 4 - Evaluate results
 
+if not shouldScore:
+    for i, query in enumerate(Queries):
+        print(f"\n### Query {query} ###")
+        print(Outputs[i])
+    exit()
 
 def loadFilenames():
     loadedFiles = []
