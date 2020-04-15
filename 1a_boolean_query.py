@@ -1,5 +1,6 @@
 import json
 import pickle
+import sys
 import traceback
 from nltk.tokenize import word_tokenize
 from nltk.stem import WordNetLemmatizer
@@ -34,18 +35,32 @@ def process(query):
 def loadQueries():
     Queries = []
     fullQuery = []
-    i = 0
-    for i in range(1, 9):
-        with open("Queries/dev_queries/query."+str(i), 'r') as f:
-            query = process(f.read())
-            Queries.append(query)
-            fullQuery += query
-    # Adding a query concatenating all previous queries
-    Queries.append(list(set(fullQuery)))
-    return Queries
+    default_queries_path = "Queries/dev_queries"
+    shouldScore = True
+
+    args = sys.argv[1:]
+    if len(args) > 0:
+        print("query detected in CLI argument -- skipping default queries")
+        # disable output scoring:
+        # we have nothing to compare the results of these queries against
+        shouldScore = False
+        for query in args:
+            Queries.append(process(query))
+    else:
+        print(f"no query passed in CLI argument -- loading from {default_queries_path}")
+        i = 0
+        for i in range(1, 9):
+            with open(f"{default_queries_path}/query.{i}", 'r') as f:
+                query = process(f.read())
+                Queries.append(query)
+                fullQuery += query
+        # Adding a query concatenating all previous queries
+        Queries.append(list(set(fullQuery)))
+
+    return Queries, shouldScore
 
 
-Queries = loadQueries()
+Queries, shouldScore = loadQueries()
 
 
 # 3 - Executing queries
@@ -210,7 +225,6 @@ for query in Queries:
                                                  transformation_lem_query_to_boolean(query, 'AND'))
             out = processing_boolean_query_with_inverted_index(
                 booleanOperators, q, inverted_index)
-        print(f"### Query {query} -> {q}: OK ###")
         Outputs.append(out)
     except MissingTerm as err:
         print(
@@ -223,6 +237,11 @@ for query in Queries:
 
 # 4 - Evaluate results
 
+if not shouldScore:
+    for i, query in enumerate(Queries):
+        print(f"\n### Query {query} ###")
+        print(Outputs[i])
+    exit()
 
 def loadFilenames():
     loadedFiles = []
