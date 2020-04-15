@@ -1,6 +1,6 @@
 import json
 import pickle
-from sys import stdout
+from sys import stdout, version_info
 from os import listdir
 from os.path import isfile, join
 from nltk.tokenize import word_tokenize
@@ -14,8 +14,15 @@ from functools import lru_cache
 
 DATA_PATH = "Data/pa1-data/"
 
-# 1 - Import the dataset
+# 0 - Check Python version
 
+if version_info[0] < 3 or version_info[1] < 7:
+    print("This script *requires* Python 3.7+. See README")
+    print(f"(you are running Python {'.'.join(map(str, version_info[:3]))})")
+    exit(1)
+
+
+# 1 - Import the dataset
 
 def map_many(iterable, *functions):
     '''Like map(), but built to accept multiple functions'''
